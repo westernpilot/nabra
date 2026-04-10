@@ -141,8 +141,6 @@ export default function LanguageScreen() {
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
         />
 
         <TouchableOpacity
@@ -227,17 +225,14 @@ const styles = StyleSheet.create({
   list: {
     paddingBottom: 8,
   },
-  row: {
-    gap: 10,
-    marginBottom: 10,
-  },
   langCard: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    padding: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 8,
     borderWidth: 2,
     borderColor: "#F1F5F9",
     elevation: 1,
@@ -254,14 +249,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   langFlag: {
-    fontSize: 28,
-    marginRight: 10,
+    fontSize: 30,
+    marginRight: 14,
   },
   langInfo: {
     flex: 1,
   },
   langName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
     color: "#1E293B",
   },
@@ -269,10 +264,10 @@ const styles = StyleSheet.create({
     color: "#1E293B",
   },
   langNative: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#94A3B8",
     fontWeight: "500",
-    marginTop: 1,
+    marginTop: 2,
   },
   langNativeSelected: {
     color: "#64748B",
