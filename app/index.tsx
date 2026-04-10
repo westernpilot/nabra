@@ -39,7 +39,7 @@ export default function HomeScreen() {
 
         <TouchableOpacity
           style={styles.startButton}
-          onPress={() => router.push("/test")}
+          onPress={() => router.push("/language")}
           activeOpacity={0.8}
         >
           <Text style={styles.startButtonText}>Start Test</Text>
