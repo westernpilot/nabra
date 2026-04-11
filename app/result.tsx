@@ -15,6 +15,7 @@ import {
   type AssessmentResult,
   type SentenceResult,
 } from "../services/assessment";
+import { ZONE_INFO, type LetterTip } from "../services/arabicGuide";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -167,26 +168,54 @@ export default function ResultScreen() {
                 <Text style={styles.letterTipsTitle}>
                   Letters to practice:
                 </Text>
-                {sr.letterTips.map((tip, i) => (
-                  <View key={i} style={styles.letterTipCard}>
-                    <View style={styles.letterTipHeader}>
-                      <Text style={styles.letterTipLetter}>
-                        {tip.letter}
-                      </Text>
-                      <View>
-                        <Text style={styles.letterTipName}>
-                          {tip.name}
-                        </Text>
-                        <Text style={styles.letterTipNameAr}>
-                          {tip.nameAr}
-                        </Text>
+                {sr.letterTips.map((tip: LetterTip, i: number) => {
+                  const zone = ZONE_INFO[tip.zone];
+                  return (
+                    <View key={i} style={styles.letterTipCard}>
+                      <View style={styles.letterTipTop}>
+                        <View style={[styles.letterCircle, { borderColor: zone.color }]}>
+                          <Text style={[styles.letterTipLetter, { color: zone.color }]}>
+                            {tip.letter}
+                          </Text>
+                        </View>
+                        <View style={styles.letterTipInfo}>
+                          <Text style={styles.letterTipName}>{tip.name}</Text>
+                          <Text style={styles.letterTipNameAr}>{tip.nameAr}</Text>
+                        </View>
                       </View>
+
+                      {/* Articulation zone bar */}
+                      <View style={styles.zoneBarContainer}>
+                        <Text style={styles.zoneBarLabel}>Lips</Text>
+                        <View style={styles.zoneBar}>
+                          {[0, 1, 2, 3, 4, 5].map((pos) => (
+                            <View
+                              key={pos}
+                              style={[
+                                styles.zoneSegment,
+                                pos === zone.position && {
+                                  backgroundColor: zone.color,
+                                  transform: [{ scaleY: 1.4 }],
+                                  borderRadius: 4,
+                                },
+                              ]}
+                            />
+                          ))}
+                        </View>
+                        <Text style={styles.zoneBarLabel}>Throat</Text>
+                      </View>
+                      <View style={styles.zoneBadgeRow}>
+                        <View style={[styles.zoneBadge, { backgroundColor: zone.color + "18" }]}>
+                          <Text style={[styles.zoneBadgeText, { color: zone.color }]}>
+                            {zone.icon} {zone.label}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.letterTipText}>{tip.tip}</Text>
                     </View>
-                    <Text style={styles.letterTipText}>
-                      {tip.tip}
-                    </Text>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             )}
           </View>
@@ -403,28 +432,42 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   letterTipCard: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    elevation: 1,
+    shadowColor: "#1E293B",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
   },
-  letterTipHeader: {
+  letterTipTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
+    gap: 14,
+    marginBottom: 14,
+  },
+  letterCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FAFAFA",
   },
   letterTipLetter: {
-    fontSize: 36,
-    fontWeight: "700",
-    color: "#EF4444",
-    width: 50,
-    textAlign: "center",
+    fontSize: 28,
+    fontWeight: "800",
+  },
+  letterTipInfo: {
+    flex: 1,
   },
   letterTipName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: "#1E293B",
   },
@@ -432,6 +475,46 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#94A3B8",
     fontWeight: "500",
+    marginTop: 2,
+  },
+  zoneBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  zoneBarLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#94A3B8",
+    width: 36,
+    textAlign: "center",
+  },
+  zoneBar: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 3,
+    height: 10,
+    alignItems: "center",
+  },
+  zoneSegment: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#E2E8F0",
+  },
+  zoneBadgeRow: {
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  zoneBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  zoneBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   letterTipText: {
     fontSize: 14,
