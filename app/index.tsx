@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -14,8 +15,11 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.hero}>
-          <Text style={styles.logo}>نَبْرَة</Text>
-          <Text style={styles.logoSub}>Nabra</Text>
+          <Image
+            source={require("../assets/logo-white.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.tagline}>
             Master your Arabic pronunciation
           </Text>
@@ -52,7 +56,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#0A0A0A",
   },
   container: {
     flex: 1,
@@ -64,46 +68,35 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logo: {
-    fontSize: 56,
-    fontWeight: "700",
-    color: "#1E293B",
-    writingDirection: "rtl",
-  },
-  logoSub: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#64748B",
-    marginTop: 2,
-    letterSpacing: 4,
-    textTransform: "uppercase",
+    width: 160,
+    height: 120,
+    marginBottom: 12,
   },
   tagline: {
     fontSize: 16,
-    color: "#94A3B8",
-    marginTop: 12,
+    color: "#6B7280",
+    marginTop: 4,
     textAlign: "center",
+    letterSpacing: 0.3,
   },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#141414",
     borderRadius: 20,
     padding: 24,
     marginBottom: 32,
-    elevation: 4,
-    shadowColor: "#1E293B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#FFFFFF",
     marginBottom: 8,
   },
   cardDescription: {
     fontSize: 15,
     lineHeight: 22,
-    color: "#64748B",
+    color: "#6B7280",
     marginBottom: 16,
   },
   cardMeta: {
@@ -111,7 +104,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#1F1F1F",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -119,21 +112,16 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#475569",
+    color: "#9CA3AF",
   },
   startButton: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#FFFFFF",
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
-    elevation: 6,
-    shadowColor: "#1E293B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
   startButtonText: {
-    color: "#FFFFFF",
+    color: "#0A0A0A",
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,
