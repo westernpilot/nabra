@@ -116,7 +116,7 @@ export default function LanguageScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder="Search languages..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor="#4B5563"
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
@@ -166,7 +166,7 @@ export default function LanguageScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#0A0A0A",
   },
   container: {
     flex: 1,
@@ -180,31 +180,31 @@ const styles = StyleSheet.create({
   arabicTitle: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#FFFFFF",
     writingDirection: "rtl",
     marginBottom: 4,
   },
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#E5E5E5",
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#6B7280",
     textAlign: "center",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#141414",
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#1F1F1F",
   },
   searchIcon: {
     fontSize: 16,
@@ -213,12 +213,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: "#1E293B",
+    color: "#E5E5E5",
     padding: 0,
   },
   clearButton: {
     fontSize: 16,
-    color: "#94A3B8",
+    color: "#6B7280",
     fontWeight: "600",
     paddingLeft: 8,
   },
@@ -228,25 +228,17 @@ const styles = StyleSheet.create({
   langCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#141414",
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 8,
     borderWidth: 2,
-    borderColor: "#F1F5F9",
-    elevation: 1,
-    shadowColor: "#1E293B",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    borderColor: "#1F1F1F",
   },
   langCardSelected: {
-    borderColor: "#1E293B",
-    backgroundColor: "#F8FAFC",
-    elevation: 3,
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    borderColor: "#E5E5E5",
+    backgroundColor: "#1A1A1A",
   },
   langFlag: {
     fontSize: 30,
@@ -258,53 +250,49 @@ const styles = StyleSheet.create({
   langName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#E5E5E5",
   },
   langNameSelected: {
-    color: "#1E293B",
+    color: "#FFFFFF",
   },
   langNative: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: "#6B7280",
     fontWeight: "500",
     marginTop: 2,
   },
   langNativeSelected: {
-    color: "#64748B",
+    color: "#9CA3AF",
   },
   checkCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#1E293B",
+    backgroundColor: "#E5E5E5",
     alignItems: "center",
     justifyContent: "center",
   },
   checkMark: {
-    color: "#FFFFFF",
+    color: "#0A0A0A",
     fontSize: 14,
     fontWeight: "700",
   },
   continueButton: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#2A2A2A",
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     marginTop: 8,
     marginBottom: 24,
-    elevation: 6,
-    shadowColor: "#1E293B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: "#3A3A3A",
   },
   continueButtonDisabled: {
-    backgroundColor: "#CBD5E1",
-    elevation: 0,
-    shadowOpacity: 0,
+    backgroundColor: "#1A1A1A",
+    borderColor: "#1F1F1F",
   },
   continueButtonText: {
-    color: "#FFFFFF",
+    color: "#E5E5E5",
     fontSize: 16,
     fontWeight: "700",
   },

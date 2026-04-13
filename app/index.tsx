@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logo: {
-    width: 160,
-    height: 120,
+    width: 220,
+    height: 160,
     marginBottom: 12,
   },
   tagline: {
@@ -115,13 +115,15 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
   },
   startButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#2A2A2A",
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#3A3A3A",
   },
   startButtonText: {
-    color: "#0A0A0A",
+    color: "#E5E5E5",
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,

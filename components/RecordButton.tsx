@@ -134,7 +134,7 @@ export default function RecordButton({
                 height: 4 + level * 32,
                 backgroundColor: isRecording
                   ? `rgba(239, 68, 68, ${0.4 + level * 0.6})`
-                  : "#E2E8F0",
+                  : "#2A2A2A",
               },
             ]}
           />
@@ -189,20 +189,19 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#1E293B",
+    backgroundColor: "#2A2A2A",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    borderWidth: 2,
+    borderColor: "#3A3A3A",
   },
   buttonRecording: {
     backgroundColor: "#EF4444",
+    borderColor: "#EF4444",
   },
   buttonDisabled: {
-    backgroundColor: "#94A3B8",
+    backgroundColor: "#1A1A1A",
+    borderColor: "#2A2A2A",
   },
   micIcon: {
     width: 20,
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 12,
     fontSize: 14,
-    color: "#64748B",
+    color: "#6B7280",
     fontWeight: "500",
   },
 });

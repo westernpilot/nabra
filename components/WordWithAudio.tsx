@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "#2A1215",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -49,24 +49,19 @@ const styles = StyleSheet.create({
   word: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#DC2626",
+    color: "#EF4444",
     writingDirection: "rtl",
   },
   playButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#fff",
+    backgroundColor: "#1F1F1F",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
   playButtonActive: {
-    backgroundColor: "#FECACA",
+    backgroundColor: "#3A1519",
   },
   playIcon: {
     fontSize: 18,

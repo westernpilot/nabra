@@ -60,7 +60,7 @@ export default function ResultScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1E293B" />
+          <ActivityIndicator size="large" color="#E5E5E5" />
           <Text style={styles.loadingText}>Analyzing your pronunciation…</Text>
           <Text style={styles.loadingSub}>This may take a few seconds</Text>
         </View>
@@ -251,7 +251,7 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#0A0A0A",
   },
   loadingContainer: {
     flex: 1,
@@ -262,12 +262,12 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1E293B",
+    color: "#E5E5E5",
     marginTop: 24,
   },
   loadingSub: {
     fontSize: 14,
-    color: "#94A3B8",
+    color: "#6B7280",
     marginTop: 8,
   },
   errorText: {
@@ -282,21 +282,23 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   scoreCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#141414",
     borderRadius: 24,
     padding: 32,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
     elevation: 4,
-    shadowColor: "#1E293B",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.4,
     shadowRadius: 12,
     marginBottom: 32,
   },
   scoreLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#94A3B8",
+    color: "#6B7280",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 16,
@@ -332,18 +334,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#E5E5E5",
     marginBottom: 16,
   },
   sentenceCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#141414",
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
     elevation: 2,
-    shadowColor: "#1E293B",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
   },
   sentenceHeader: {
@@ -364,10 +368,10 @@ const styles = StyleSheet.create({
   sentenceIndex: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#94A3B8",
+    color: "#6B7280",
   },
   perfectBadge: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#0D2818",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -378,7 +382,7 @@ const styles = StyleSheet.create({
     color: "#22C55E",
   },
   errorBadge: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "#2A1215",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -397,7 +401,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   correctWord: {
-    color: "#1E293B",
+    color: "#E5E5E5",
     fontWeight: "500",
   },
   mistakeWord: {
@@ -410,12 +414,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: "#1F1F1F",
   },
   mistakesTitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#94A3B8",
+    color: "#4B5563",
     marginBottom: 8,
   },
   mistakesList: {
@@ -428,20 +432,20 @@ const styles = StyleSheet.create({
   letterTipsTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#E5E5E5",
     marginBottom: 10,
   },
   letterTipCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#141414",
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#1F1F1F",
     elevation: 1,
-    shadowColor: "#1E293B",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
   },
   letterTipTop: {
@@ -457,7 +461,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#2A2A2A",
   },
   letterTipLetter: {
     fontSize: 28,
@@ -469,11 +473,11 @@ const styles = StyleSheet.create({
   letterTipName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#E5E5E5",
   },
   letterTipNameAr: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: "#6B7280",
     fontWeight: "500",
     marginTop: 2,
   },
@@ -486,7 +490,7 @@ const styles = StyleSheet.create({
   zoneBarLabel: {
     fontSize: 10,
     fontWeight: "600",
-    color: "#94A3B8",
+    color: "#4B5563",
     width: 36,
     textAlign: "center",
   },
@@ -501,7 +505,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#2A2A2A",
   },
   zoneBadgeRow: {
     flexDirection: "row",
@@ -519,41 +523,43 @@ const styles = StyleSheet.create({
   letterTipText: {
     fontSize: 14,
     lineHeight: 21,
-    color: "#475569",
+    color: "#6B7280",
   },
   feedbackCard: {
-    backgroundColor: "#FFFBEB",
+    backgroundColor: "#1A1A0A",
     borderRadius: 20,
     padding: 20,
     marginBottom: 32,
     borderWidth: 1,
-    borderColor: "#FDE68A",
+    borderColor: "#3A3A1A",
   },
   feedbackTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#92400E",
+    color: "#D4A017",
     marginBottom: 8,
   },
   feedbackText: {
     fontSize: 15,
     lineHeight: 24,
-    color: "#78350F",
+    color: "#B8960F",
   },
   retryButton: {
-    backgroundColor: "#1E293B",
+    backgroundColor: "#2A2A2A",
+    borderWidth: 1,
+    borderColor: "#3A3A3A",
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     marginBottom: 12,
     elevation: 6,
-    shadowColor: "#1E293B",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.45,
     shadowRadius: 8,
   },
   retryButtonText: {
-    color: "#FFFFFF",
+    color: "#E5E5E5",
     fontSize: 17,
     fontWeight: "700",
   },
@@ -562,10 +568,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#E2E8F0",
+    borderColor: "#1F1F1F",
   },
   homeButtonText: {
-    color: "#64748B",
+    color: "#6B7280",
     fontSize: 17,
     fontWeight: "700",
   },
