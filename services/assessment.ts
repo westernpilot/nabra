@@ -162,6 +162,13 @@ async function assessSentence(
   }
 }
 
+export async function assessSingleWord(
+  audioUri: string,
+  word: string
+): Promise<SentenceResult> {
+  return assessSentence(audioUri, word);
+}
+
 export async function runAssessment(): Promise<AssessmentResult> {
   const sentenceResults: SentenceResult[] = [];
 

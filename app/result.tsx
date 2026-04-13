@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,24 @@ import {
   SafeAreaView,
   ScrollView,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import WordWithAudio from "../components/WordWithAudio";
+import RecordButton from "../components/RecordButton";
 import {
   runAssessment,
+  assessSingleWord,
   type AssessmentResult,
   type SentenceResult,
 } from "../services/assessment";
-import { ZONE_INFO, type LetterTip } from "../services/arabicGuide";
+import {
+  ZONE_INFO,
+  getLanguageNote,
+  type LetterTip,
+} from "../services/arabicGuide";
+import { saveSession } from "../services/progress";
+import { getSelectedLanguage } from "../services/languages";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -29,32 +38,63 @@ function getScoreLabel(score: number): string {
   return "Needs Work";
 }
 
-function highlightSentence(sentence: string, mistakes: string[]) {
-  const words = sentence.split(" ");
-  return words.map((word, i) => {
-    const isMistake = mistakes.includes(word);
-    return (
-      <Text
-        key={i}
-        style={isMistake ? styles.mistakeWord : styles.correctWord}
-      >
-        {word}{" "}
-      </Text>
-    );
-  });
-}
-
 export default function ResultScreen() {
   const router = useRouter();
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryWord, setRetryWord] = useState<string | null>(null);
+  const [retryLoading, setRetryLoading] = useState(false);
+  const [retryScore, setRetryScore] = useState<number | null>(null);
+
+  const langCode = getSelectedLanguage()?.code || "en";
 
   useEffect(() => {
     runAssessment()
-      .then(setResult)
+      .then(async (r) => {
+        setResult(r);
+        await saveSession(r);
+      })
       .catch((err) => console.error("Assessment error:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleRetryRecord = useCallback(
+    async (uri: string) => {
+      if (!retryWord) return;
+      setRetryLoading(true);
+      try {
+        const wordResult = await assessSingleWord(uri, retryWord);
+        setRetryScore(wordResult.score);
+      } catch {
+        setRetryScore(0);
+      } finally {
+        setRetryLoading(false);
+      }
+    },
+    [retryWord]
+  );
+
+  const closeRetryModal = () => {
+    setRetryWord(null);
+    setRetryScore(null);
+    setRetryLoading(false);
+  };
+
+  function highlightSentence(sentence: string, mistakes: string[]) {
+    const words = sentence.split(" ");
+    return words.map((word, i) => {
+      const isMistake = mistakes.includes(word);
+      return (
+        <Text
+          key={i}
+          style={isMistake ? styles.mistakeWord : styles.correctWord}
+          onPress={isMistake ? () => setRetryWord(word) : undefined}
+        >
+          {word}{" "}
+        </Text>
+      );
+    });
+  }
 
   if (loading) {
     return (
@@ -92,6 +132,66 @@ export default function ResultScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* Retry word modal */}
+      <Modal
+        visible={retryWord !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={closeRetryModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Practice Word</Text>
+              <TouchableOpacity onPress={closeRetryModal}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalWord}>{retryWord}</Text>
+
+            {retryLoading && (
+              <Text style={styles.modalAssessing}>Analyzing...</Text>
+            )}
+            {retryScore !== null && !retryLoading && (
+              <View style={styles.modalScoreRow}>
+                <View
+                  style={[
+                    styles.modalScoreBadge,
+                    { backgroundColor: getScoreColor(retryScore) },
+                  ]}
+                >
+                  <Text style={styles.modalScoreText}>
+                    {retryScore}/100
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.modalScoreLabel,
+                    { color: getScoreColor(retryScore) },
+                  ]}
+                >
+                  {retryScore >= 80
+                    ? "Excellent!"
+                    : retryScore >= 60
+                    ? "Getting better!"
+                    : "Keep trying!"}
+                </Text>
+              </View>
+            )}
+
+            <RecordButton
+              onRecordingComplete={handleRetryRecord}
+              disabled={retryLoading}
+            />
+
+            <Text style={styles.modalHint}>
+              Tap the mic and say "{retryWord}" clearly
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -137,7 +237,7 @@ export default function ResultScreen() {
                   </View>
                 ) : (
                   <View style={styles.errorBadge}>
-                    <Text style={styles.errorText}>
+                    <Text style={styles.errorBadgeText}>
                       {sr.mistakes.length} error
                       {sr.mistakes.length > 1 ? "s" : ""}
                     </Text>
@@ -153,7 +253,7 @@ export default function ResultScreen() {
             {sr.mistakes.length > 0 && (
               <View style={styles.mistakesSection}>
                 <Text style={styles.mistakesTitle}>
-                  Tap to hear correct pronunciation:
+                  Tap red words to practice, or hear correct pronunciation:
                 </Text>
                 <View style={styles.mistakesList}>
                   {sr.mistakes.map((word, i) => (
@@ -170,18 +270,42 @@ export default function ResultScreen() {
                 </Text>
                 {sr.letterTips.map((tip: LetterTip, i: number) => {
                   const zone = ZONE_INFO[tip.zone];
+                  const langNote = getLanguageNote(langCode, tip.letter);
                   return (
-                    <View key={i} style={styles.letterTipCard}>
+                    <TouchableOpacity
+                      key={i}
+                      style={styles.letterTipCard}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/drill",
+                          params: { letter: tip.letter },
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
                       <View style={styles.letterTipTop}>
-                        <View style={[styles.letterCircle, { borderColor: zone.color }]}>
-                          <Text style={[styles.letterTipLetter, { color: zone.color }]}>
+                        <View
+                          style={[
+                            styles.letterCircle,
+                            { borderColor: zone.color },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.letterTipLetter,
+                              { color: zone.color },
+                            ]}
+                          >
                             {tip.letter}
                           </Text>
                         </View>
                         <View style={styles.letterTipInfo}>
                           <Text style={styles.letterTipName}>{tip.name}</Text>
-                          <Text style={styles.letterTipNameAr}>{tip.nameAr}</Text>
+                          <Text style={styles.letterTipNameAr}>
+                            {tip.nameAr}
+                          </Text>
                         </View>
+                        <Text style={styles.drillArrow}>→</Text>
                       </View>
 
                       {/* Articulation zone bar */}
@@ -205,15 +329,37 @@ export default function ResultScreen() {
                         <Text style={styles.zoneBarLabel}>Throat</Text>
                       </View>
                       <View style={styles.zoneBadgeRow}>
-                        <View style={[styles.zoneBadge, { backgroundColor: zone.color + "18" }]}>
-                          <Text style={[styles.zoneBadgeText, { color: zone.color }]}>
+                        <View
+                          style={[
+                            styles.zoneBadge,
+                            { backgroundColor: zone.color + "18" },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.zoneBadgeText,
+                              { color: zone.color },
+                            ]}
+                          >
                             {zone.icon} {zone.label}
                           </Text>
                         </View>
                       </View>
 
                       <Text style={styles.letterTipText}>{tip.tip}</Text>
-                    </View>
+
+                      {langNote && (
+                        <View style={styles.langNoteBox}>
+                          <Text style={styles.langNoteText}>{langNote}</Text>
+                        </View>
+                      )}
+
+                      <View style={styles.drillPrompt}>
+                        <Text style={styles.drillPromptText}>
+                          Tap to practice this letter →
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -227,13 +373,21 @@ export default function ResultScreen() {
           <Text style={styles.feedbackText}>{result.feedback}</Text>
         </View>
 
-        {/* Retry */}
+        {/* Buttons */}
         <TouchableOpacity
           style={styles.retryButton}
           onPress={() => router.replace("/test")}
           activeOpacity={0.8}
         >
           <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.historyButton}
+          onPress={() => router.push("/history")}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.historyButtonText}>View Progress</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -249,10 +403,7 @@ export default function ResultScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#0A0A0A",
-  },
+  safe: { flex: 1, backgroundColor: "#0A0A0A" },
   loadingContainer: {
     flex: 1,
     alignItems: "center",
@@ -265,22 +416,14 @@ const styles = StyleSheet.create({
     color: "#E5E5E5",
     marginTop: 24,
   },
-  loadingSub: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 8,
-  },
+  loadingSub: { fontSize: 14, color: "#6B7280", marginTop: 8 },
   errorText: {
     fontSize: 20,
     fontWeight: "700",
     color: "#EF4444",
     marginBottom: 8,
   },
-  scroll: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 40,
-  },
+  scroll: { paddingHorizontal: 24, paddingTop: 48, paddingBottom: 40 },
   scoreCard: {
     backgroundColor: "#141414",
     borderRadius: 24,
@@ -288,11 +431,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#1F1F1F",
-    elevation: 4,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
     marginBottom: 32,
   },
   scoreLabel: {
@@ -312,25 +450,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 16,
   },
-  scoreNumber: {
-    fontSize: 48,
-    fontWeight: "800",
-  },
-  scoreOutOf: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: -4,
-  },
-  scoreBadge: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  scoreBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  scoreNumber: { fontSize: 48, fontWeight: "800" },
+  scoreOutOf: { fontSize: 16, fontWeight: "600", marginTop: -4 },
+  scoreBadge: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20 },
+  scoreBadgeText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
@@ -344,11 +467,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#1F1F1F",
-    elevation: 2,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
   },
   sentenceHeader: {
     flexDirection: "row",
@@ -356,54 +474,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  sentenceScoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  sentenceScore: {
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  sentenceIndex: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#6B7280",
-  },
+  sentenceScoreRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  sentenceScore: { fontSize: 16, fontWeight: "800" },
+  sentenceIndex: { fontSize: 14, fontWeight: "700", color: "#6B7280" },
   perfectBadge: {
     backgroundColor: "#0D2818",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  perfectText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#22C55E",
-  },
+  perfectText: { fontSize: 13, fontWeight: "600", color: "#22C55E" },
   errorBadge: {
     backgroundColor: "#2A1215",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  errorText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#EF4444",
-  },
+  errorBadgeText: { fontSize: 13, fontWeight: "600", color: "#EF4444" },
   sentenceText: {
     fontSize: 24,
     lineHeight: 44,
     textAlign: "right",
     writingDirection: "rtl",
-    flexDirection: "row-reverse",
-    flexWrap: "wrap",
   },
-  correctWord: {
-    color: "#E5E5E5",
-    fontWeight: "500",
-  },
+  correctWord: { color: "#E5E5E5", fontWeight: "500" },
   mistakeWord: {
     color: "#EF4444",
     fontWeight: "700",
@@ -422,13 +516,8 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     marginBottom: 8,
   },
-  mistakesList: {
-    flexDirection: "row-reverse",
-    flexWrap: "wrap",
-  },
-  letterTipsSection: {
-    marginTop: 16,
-  },
+  mistakesList: { flexDirection: "row-reverse", flexWrap: "wrap" },
+  letterTipsSection: { marginTop: 16 },
   letterTipsTitle: {
     fontSize: 13,
     fontWeight: "700",
@@ -436,17 +525,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   letterTipCard: {
-    backgroundColor: "#141414",
+    backgroundColor: "#1A1A1A",
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: "#1F1F1F",
-    elevation: 1,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   letterTipTop: {
     flexDirection: "row",
@@ -463,24 +547,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#2A2A2A",
   },
-  letterTipLetter: {
-    fontSize: 28,
-    fontWeight: "800",
-  },
-  letterTipInfo: {
-    flex: 1,
-  },
-  letterTipName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#E5E5E5",
-  },
+  letterTipLetter: { fontSize: 28, fontWeight: "800" },
+  letterTipInfo: { flex: 1 },
+  letterTipName: { fontSize: 16, fontWeight: "700", color: "#E5E5E5" },
   letterTipNameAr: {
     fontSize: 13,
     color: "#6B7280",
     fontWeight: "500",
     marginTop: 2,
   },
+  drillArrow: { fontSize: 20, color: "#4B5563", fontWeight: "700" },
   zoneBarContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -507,23 +583,35 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: "#2A2A2A",
   },
-  zoneBadgeRow: {
-    flexDirection: "row",
-    marginBottom: 10,
+  zoneBadgeRow: { flexDirection: "row", marginBottom: 10 },
+  zoneBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  zoneBadgeText: { fontSize: 13, fontWeight: "700" },
+  letterTipText: { fontSize: 14, lineHeight: 21, color: "#6B7280" },
+  langNoteBox: {
+    backgroundColor: "#1A1A2A",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#2A2A3A",
   },
-  zoneBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  zoneBadgeText: {
+  langNoteText: {
     fontSize: 13,
-    fontWeight: "700",
+    lineHeight: 19,
+    color: "#8B8BFF",
+    fontWeight: "500",
   },
-  letterTipText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#6B7280",
+  drillPrompt: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#1F1F1F",
+  },
+  drillPromptText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#4B5563",
+    textAlign: "center",
   },
   feedbackCard: {
     backgroundColor: "#1A1A0A",
@@ -539,11 +627,7 @@ const styles = StyleSheet.create({
     color: "#D4A017",
     marginBottom: 8,
   },
-  feedbackText: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: "#B8960F",
-  },
+  feedbackText: { fontSize: 15, lineHeight: 24, color: "#B8960F" },
   retryButton: {
     backgroundColor: "#2A2A2A",
     borderWidth: 1,
@@ -552,17 +636,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     marginBottom: 12,
-    elevation: 6,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 8,
   },
-  retryButtonText: {
-    color: "#E5E5E5",
-    fontSize: 17,
-    fontWeight: "700",
+  retryButtonText: { color: "#E5E5E5", fontSize: 17, fontWeight: "700" },
+  historyButton: {
+    backgroundColor: "#141414",
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 12,
   },
+  historyButtonText: { color: "#9CA3AF", fontSize: 17, fontWeight: "700" },
   homeButton: {
     paddingVertical: 18,
     borderRadius: 16,
@@ -570,9 +655,57 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#1F1F1F",
   },
-  homeButtonText: {
-    color: "#6B7280",
-    fontSize: 17,
+  homeButtonText: { color: "#6B7280", fontSize: 17, fontWeight: "700" },
+
+  // Retry modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#141414",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: "#E5E5E5" },
+  modalClose: { fontSize: 22, color: "#6B7280", fontWeight: "600" },
+  modalWord: {
+    fontSize: 48,
     fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
+    writingDirection: "rtl",
+    marginBottom: 8,
+  },
+  modalAssessing: {
+    textAlign: "center",
+    color: "#6B7280",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  modalScoreRow: { alignItems: "center", marginBottom: 8, gap: 8 },
+  modalScoreBadge: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  modalScoreText: { color: "#FFFFFF", fontSize: 18, fontWeight: "700" },
+  modalScoreLabel: { fontSize: 15, fontWeight: "600" },
+  modalHint: {
+    textAlign: "center",
+    color: "#4B5563",
+    fontSize: 13,
+    marginTop: 8,
   },
 });

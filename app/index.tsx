@@ -48,6 +48,14 @@ export default function HomeScreen() {
         >
           <Text style={styles.startButtonText}>Start Test</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.historyButton}
+          onPress={() => router.push("/history")}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.historyButtonText}>View Progress</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -127,5 +135,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  historyButton: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+  },
+  historyButtonText: {
+    color: "#6B7280",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

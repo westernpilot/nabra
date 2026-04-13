@@ -64,6 +64,118 @@ export const ARABIC_PRONUNCIATION_GUIDE: Record<string, LetterTip> = {
   "\u0649": { letter: "\u0649", name: "Alef Maqsura", nameAr: "\u0623\u0644\u0641 \u0645\u0642\u0635\u0648\u0631\u0629", zone: "throat", tip: "Pronounced as a long 'aa' vowel at the end of a word." },
 };
 
+// Maps native language code -> Arabic letter -> language-specific note
+const LANGUAGE_NOTES: Record<string, Record<string, string>> = {
+  en: {
+    "ح": "This sound doesn't exist in English. It's NOT the same as 'h' — squeeze your throat muscles harder.",
+    "خ": "Think of the 'ch' in Scottish 'loch'. No English equivalent otherwise.",
+    "ع": "Completely foreign to English. Constrict your throat deep down and push voice through.",
+    "غ": "Similar to the French 'r' in 'Paris'. Doesn't exist in English at all.",
+    "ق": "Much deeper than English 'k'. Press the very back of your tongue against your uvula.",
+    "ص": "Like English 's' but emphatic — pull the back of your tongue up while saying 's'.",
+    "ض": "Unique to Arabic. No equivalent in any other language. Press tongue sides against upper molars.",
+    "ط": "Like English 't' but emphatic and heavier. Raise the back of your tongue while saying 't'.",
+    "ظ": "Like 'th' in 'this' but emphatic. Raise the back of your tongue while doing it.",
+    "ث": "Same as English 'th' in 'think'. You already know this sound!",
+    "ذ": "Same as English 'th' in 'this'. You already know this sound!",
+    "ر": "A tongue tap/flap, not the English 'r'. Tap your tongue once quickly against the gum ridge.",
+  },
+  fr: {
+    "ح": "N'existe pas en français. Serrez les muscles de la gorge plus fort que pour le 'h'.",
+    "خ": "Resembles slightly the French 'r' but voiceless. Like clearing your throat.",
+    "ع": "N'existe pas en français. Contractez la gorge profondément.",
+    "غ": "Very similar to the French 'r' grasseyé! Use that same position but slightly deeper.",
+    "ق": "Deeper than French 'k'. Press the very back of the tongue against the uvula.",
+    "ر": "NOT the French 'r'. Tap the tongue tip against the gum ridge like in Spanish.",
+  },
+  es: {
+    "ح": "No existe en español. Aprieta los músculos de la garganta.",
+    "خ": "Similar to the Spanish 'j' in 'jota' but a bit deeper in the throat.",
+    "ع": "No existe en español. Contrae la garganta profundamente.",
+    "غ": "Similar to the 'g' fricativa in 'agua' but from deeper.",
+    "ر": "Very similar to the Spanish rolled 'r'! Use a single tap like in 'pero'.",
+    "ث": "Like the Castilian 'z' in 'zapato'. You may already know this sound!",
+    "ذ": "Like 'd' in some Spanish dialects. Tongue between teeth with voice.",
+  },
+  de: {
+    "ح": "Existiert nicht im Deutschen. Kehlmuskeln zusammendrücken.",
+    "خ": "Similar to the German 'ch' in 'Bach'! Use that same back-of-throat position.",
+    "ع": "Existiert nicht im Deutschen. Tief in der Kehle drücken.",
+    "غ": "Like a voiced version of German 'ch' in 'Bach'. Add voice to it.",
+    "ر": "Not the German 'r'. Tap the tongue tip once against the gum ridge.",
+  },
+  tr: {
+    "ح": "Türkçede yok. Boğaz kaslarını sık.",
+    "خ": "Türkçedeki 'h' sesine benzer ama daha boğazdan gelir.",
+    "ع": "Türkçede yok. Boğazı derin bir şekilde sık.",
+    "غ": "Türkçedeki 'ğ' sesine biraz benzer ama daha boğazdan.",
+    "ث": "Türkçede yok. Dilini dişlerin arasına koy ve 's' söyle.",
+    "ذ": "Türkçede yok. Dilini dişlerin arasına koy ve 'z' söyle.",
+  },
+  ur: {
+    "ح": "Urdu already has this sound! Same as حاء in Urdu.",
+    "خ": "Same as خاء in Urdu. You already know this sound!",
+    "ع": "Same as عین in Urdu. Focus on the deep throat constriction.",
+    "غ": "Same as غین in Urdu. You already know this sound!",
+    "ق": "Same as قاف in Urdu. You already know this sound!",
+    "ض": "Urdu has this letter. Focus on pressing tongue sides against upper molars with force.",
+    "ط": "Same as طاء in Urdu. Keep it emphatic!",
+    "ظ": "Same as ظاء in Urdu. Keep it emphatic!",
+    "ث": "Same as ثاء — but often pronounced as 'sa' in Urdu. In Arabic, tongue must go between teeth.",
+    "ذ": "Same as ذال — but often pronounced as 'zal' in Urdu. In Arabic, tongue must go between teeth.",
+  },
+  hi: {
+    "ح": "Hindi doesn't have this. It's deeper than 'h' — squeeze throat muscles.",
+    "خ": "Similar to 'ख' (kha) but more from the back of the throat with air friction.",
+    "ع": "Doesn't exist in Hindi. Constrict throat deeply and push voice through.",
+    "غ": "Similar to 'ग़' (ghain) in some Hindi words from Urdu. A gargling sound.",
+    "ق": "Similar to 'क़' (qaaf) in Hindi-Urdu words. Deeper than 'क'.",
+    "ث": "Doesn't exist in Hindi. Place tongue between teeth and blow air (voiceless).",
+    "ذ": "Doesn't exist in Hindi. Place tongue between teeth with voice.",
+  },
+  fa: {
+    "ح": "Same as حاء in Farsi. You already know this sound!",
+    "خ": "Same as خاء in Farsi. You already know this sound!",
+    "ع": "Same as عین in Farsi, though often softened. Make it more constricted for Arabic.",
+    "غ": "Same as غین in Farsi. You already know this sound!",
+    "ق": "In Farsi often pronounced as 'gh'. In Arabic, it's a sharp stop from the uvula — more forceful.",
+    "ص": "In Farsi often simplified to regular 's'. In Arabic, keep it emphatic.",
+    "ض": "Doesn't exist in Farsi. Unique to Arabic — press tongue sides against upper molars.",
+    "ط": "In Farsi often simplified to regular 't'. In Arabic, keep it emphatic.",
+    "ظ": "In Farsi often simplified to 'z'. In Arabic, tongue between teeth and emphatic.",
+  },
+  zh: {
+    "ح": "中文里没有这个音。收紧喉咙肌肉，比 'h' 更深。",
+    "خ": "类似普通话中的 'h' 但更靠喉咙后部，带有摩擦。",
+    "ع": "中文里完全没有。深深收紧喉咙发声。",
+    "غ": "中文里没有。像喉咙深处的漱口声。",
+    "ر": "不是中文的任何音。舌尖轻弹上牙龈一次。",
+    "ث": "中文里没有。把舌头放在牙齿之间吹气。",
+    "ذ": "中文里没有。把舌头放在牙齿之间并发声。",
+  },
+  ja: {
+    "ح": "日本語にはない音。喉の筋肉を締めて、'h'より深く。",
+    "خ": "日本語にはない音。喉の奥で空気を擦らせる。",
+    "ع": "日本語には全くない音。喉を深く収縮させて声を出す。",
+    "ر": "日本語の「ら行」に近いが、舌先で歯茎を一度タップ。",
+    "ث": "日本語にはない。舌を歯の間に置いて息を吹く。",
+    "ذ": "日本語にはない。舌を歯の間に置いて声を出す。",
+  },
+  ko: {
+    "ح": "한국어에 없는 소리. 목 근육을 조여서 'h'보다 더 깊이.",
+    "خ": "한국어의 'ㅎ'과 비슷하지만 목 뒤쪽에서 더 마찰.",
+    "ع": "한국어에 전혀 없는 소리. 목을 깊이 조여서.",
+    "ر": "한국어의 'ㄹ'과 비슷. 혀끝으로 잇몸을 한번 튕기기.",
+  },
+};
+
+export function getLanguageNote(
+  langCode: string,
+  letter: string
+): string | null {
+  return LANGUAGE_NOTES[langCode]?.[letter] ?? null;
+}
+
 const IPA_TO_ARABIC: Record<string, string> = {
   "\u0294": "\u0621",
   "b": "\u0628",
