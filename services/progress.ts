@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { AssessmentResult } from "./assessment";
+import { getUserLevel } from "./levels";
 
 const STORAGE_KEY = "nabra_progress";
 
@@ -9,9 +10,11 @@ export interface SessionRecord {
   score: number;
   sentenceScores: number[];
   weakLetters: string[];
+  level?: string;
 }
 
 export async function saveSession(result: AssessmentResult): Promise<void> {
+  const currentLevel = await getUserLevel();
   const record: SessionRecord = {
     id: Date.now().toString(),
     date: new Date().toISOString(),
@@ -22,6 +25,7 @@ export async function saveSession(result: AssessmentResult): Promise<void> {
         result.sentenceResults.flatMap((s) => s.letterTips.map((t) => t.letter))
       ),
     ],
+    level: currentLevel,
   };
 
   const history = await getHistory();

@@ -13,6 +13,7 @@ import {
   clearHistory,
   type SessionRecord,
 } from "../services/progress";
+import { LEVEL_INFO, type DifficultyLevel } from "../services/levels";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -199,10 +200,20 @@ export default function HistoryScreen() {
 
             {/* Session list */}
             <Text style={styles.sectionTitle}>Session History</Text>
-            {sessions.map((s) => (
+            {sessions.map((s) => {
+              const lvl = s.level as DifficultyLevel | undefined;
+              const lvlInfo = lvl ? LEVEL_INFO[lvl] : null;
+              return (
               <View key={s.id} style={styles.sessionCard}>
                 <View style={styles.sessionHeader}>
-                  <Text style={styles.sessionDate}>{formatDate(s.date)}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Text style={styles.sessionDate}>{formatDate(s.date)}</Text>
+                    {lvlInfo && (
+                      <Text style={[styles.sessionLevel, { color: lvlInfo.color }]}>
+                        {lvlInfo.label}
+                      </Text>
+                    )}
+                  </View>
                   <Text
                     style={[
                       styles.sessionScore,
@@ -228,7 +239,8 @@ export default function HistoryScreen() {
                   </View>
                 )}
               </View>
-            ))}
+              );
+            })}
 
             {/* Clear */}
             <TouchableOpacity
@@ -396,6 +408,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   sessionDate: { color: "#6B7280", fontSize: 13, fontWeight: "500" },
+  sessionLevel: { fontSize: 12, fontWeight: "700" },
   sessionScore: { fontSize: 18, fontWeight: "800" },
   sessionLetters: {
     flexDirection: "row",

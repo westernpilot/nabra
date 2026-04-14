@@ -24,18 +24,22 @@ export interface AssessmentResult {
   score: number;
   sentenceResults: SentenceResult[];
   feedback: string;
+  level?: string;
 }
 
-export const TEST_SENTENCES = [
-  "أُحِبُّ القِرَاءَةَ كَثِيرًا",
-  "الطَّقْسُ جَمِيلٌ اليَوْمَ",
-  "ذَهَبْتُ إِلَى المَدْرَسَةِ صَبَاحًا",
-];
-
+let _sentences: string[] = [];
 let _recordings: string[] = [];
+
+export function storeSentences(sentences: string[]) {
+  _sentences = [...sentences];
+}
 
 export function storeRecordings(uris: string[]) {
   _recordings = [...uris];
+}
+
+export function getStoredSentences(): string[] {
+  return _sentences;
 }
 
 function utf8ToBase64(str: string): string {
@@ -171,14 +175,19 @@ export async function assessSingleWord(
 
 export async function runAssessment(): Promise<AssessmentResult> {
   const sentenceResults: SentenceResult[] = [];
+  const sentences = _sentences.length > 0 ? _sentences : [
+    "أُحِبُّ القِرَاءَةَ كَثِيرًا",
+    "الطَّقْسُ جَمِيلٌ اليَوْمَ",
+    "ذَهَبْتُ إِلَى المَدْرَسَةِ صَبَاحًا",
+  ];
 
-  for (let i = 0; i < TEST_SENTENCES.length; i++) {
+  for (let i = 0; i < sentences.length; i++) {
     if (_recordings[i]) {
-      const result = await assessSentence(_recordings[i], TEST_SENTENCES[i]);
+      const result = await assessSentence(_recordings[i], sentences[i]);
       sentenceResults.push(result);
     } else {
       sentenceResults.push({
-        sentence: TEST_SENTENCES[i],
+        sentence: sentences[i],
         score: 0,
         words: [],
         mistakes: [],

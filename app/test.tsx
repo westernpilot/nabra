@@ -1,24 +1,43 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import RecordButton from "../components/RecordButton";
-import { TEST_SENTENCES, storeRecordings } from "../services/assessment";
+import {
+  storeSentences,
+  storeRecordings,
+} from "../services/assessment";
+import {
+  getSentencesForLevel,
+  getUserLevel,
+  LEVEL_INFO,
+  type DifficultyLevel,
+} from "../services/levels";
 
 export default function TestScreen() {
   const router = useRouter();
+  const [level, setLevel] = useState<DifficultyLevel | null>(null);
+  const [sentences, setSentences] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recordings, setRecordings] = useState<string[]>([]);
-  const [currentRecordingUri, setCurrentRecordingUri] = useState<
-    string | null
-  >(null);
+  const [currentRecordingUri, setCurrentRecordingUri] = useState<string | null>(null);
 
-  const isLastSentence = currentIndex === TEST_SENTENCES.length - 1;
+  useEffect(() => {
+    getUserLevel().then((l) => {
+      setLevel(l);
+      const s = getSentencesForLevel(l);
+      setSentences(s);
+      storeSentences(s);
+    });
+  }, []);
+
+  const isLastSentence = currentIndex === sentences.length - 1;
   const hasRecorded = currentRecordingUri !== null;
 
   const handleRecordingComplete = useCallback((uri: string) => {
@@ -40,10 +59,22 @@ export default function TestScreen() {
     }
   };
 
+  if (!level || sentences.length === 0) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#E5E5E5" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const info = LEVEL_INFO[level];
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        {/* Progress */}
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -52,7 +83,7 @@ export default function TestScreen() {
             <Text style={styles.backText}>✕</Text>
           </TouchableOpacity>
           <View style={styles.progressContainer}>
-            {TEST_SENTENCES.map((_, i) => (
+            {sentences.map((_, i) => (
               <View
                 key={i}
                 style={[
@@ -64,16 +95,24 @@ export default function TestScreen() {
             ))}
           </View>
           <Text style={styles.counter}>
-            {currentIndex + 1}/{TEST_SENTENCES.length}
+            {currentIndex + 1}/{sentences.length}
           </Text>
+        </View>
+
+        {/* Level badge */}
+        <View style={styles.levelRow}>
+          <View style={[styles.levelBadge, { borderColor: info.color }]}>
+            <Text style={[styles.levelText, { color: info.color }]}>
+              {info.label}
+            </Text>
+            <Text style={styles.levelAr}>{info.labelAr}</Text>
+          </View>
         </View>
 
         {/* Sentence Display */}
         <View style={styles.sentenceCard}>
           <Text style={styles.instruction}>Read aloud:</Text>
-          <Text style={styles.sentence}>
-            {TEST_SENTENCES[currentIndex]}
-          </Text>
+          <Text style={styles.sentence}>{sentences[currentIndex]}</Text>
         </View>
 
         {/* Record Button */}
@@ -102,20 +141,18 @@ export default function TestScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  safe: { flex: 1, backgroundColor: "#0A0A0A" },
+  loadingContainer: {
     flex: 1,
-    backgroundColor: "#0A0A0A",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 32,
+    marginBottom: 16,
   },
   backButton: {
     width: 40,
@@ -125,39 +162,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  backText: {
-    fontSize: 18,
-    color: "#9CA3AF",
-    fontWeight: "600",
-  },
-  progressContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  backText: { fontSize: 18, color: "#9CA3AF", fontWeight: "600" },
+  progressContainer: { flexDirection: "row", gap: 8 },
   progressDot: {
     width: 32,
     height: 6,
     borderRadius: 3,
     backgroundColor: "#2A2A2A",
   },
-  progressDotActive: {
-    backgroundColor: "#E5E5E5",
-    width: 48,
+  progressDotActive: { backgroundColor: "#E5E5E5", width: 48 },
+  progressDotDone: { backgroundColor: "#22C55E" },
+  counter: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
+  levelRow: { alignItems: "center", marginBottom: 8 },
+  levelBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: "#141414",
   },
-  progressDotDone: {
-    backgroundColor: "#22C55E",
-  },
-  counter: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
+  levelText: { fontSize: 14, fontWeight: "700" },
+  levelAr: { fontSize: 14, color: "#6B7280", fontWeight: "600" },
   sentenceCard: {
     backgroundColor: "#141414",
     borderRadius: 24,
     padding: 32,
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 16,
     borderWidth: 1,
     borderColor: "#1F1F1F",
   },
@@ -187,13 +221,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#3A3A3A",
   },
-  nextButtonDisabled: {
-    backgroundColor: "#1A1A1A",
-    borderColor: "#1F1F1F",
-  },
-  nextButtonText: {
-    color: "#E5E5E5",
-    fontSize: 17,
-    fontWeight: "700",
-  },
+  nextButtonDisabled: { backgroundColor: "#1A1A1A", borderColor: "#1F1F1F" },
+  nextButtonText: { color: "#E5E5E5", fontSize: 17, fontWeight: "700" },
 });

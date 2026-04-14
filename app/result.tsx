@@ -25,6 +25,13 @@ import {
 } from "../services/arabicGuide";
 import { saveSession } from "../services/progress";
 import { getSelectedLanguage } from "../services/languages";
+import {
+  getUserLevel,
+  setUserLevel,
+  calculateNewLevel,
+  LEVEL_INFO,
+  type DifficultyLevel,
+} from "../services/levels";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -45,17 +52,33 @@ export default function ResultScreen() {
   const [retryWord, setRetryWord] = useState<string | null>(null);
   const [retryLoading, setRetryLoading] = useState(false);
   const [retryScore, setRetryScore] = useState<number | null>(null);
+  const [levelChange, setLevelChange] = useState<{
+    oldLevel: DifficultyLevel;
+    newLevel: DifficultyLevel;
+    direction: "up" | "down" | "same";
+  } | null>(null);
 
   const langCode = getSelectedLanguage()?.code || "en";
 
   useEffect(() => {
-    runAssessment()
-      .then(async (r) => {
+    (async () => {
+      try {
+        const oldLevel = await getUserLevel();
+        const r = await runAssessment();
         setResult(r);
         await saveSession(r);
-      })
-      .catch((err) => console.error("Assessment error:", err))
-      .finally(() => setLoading(false));
+
+        const { newLevel, direction } = calculateNewLevel(oldLevel, r.score);
+        setLevelChange({ oldLevel, newLevel, direction });
+        if (newLevel !== oldLevel) {
+          await setUserLevel(newLevel);
+        }
+      } catch (err) {
+        console.error("Assessment error:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const handleRetryRecord = useCallback(
@@ -213,6 +236,57 @@ export default function ResultScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Level change */}
+        {levelChange && levelChange.direction !== "same" && (
+          <View
+            style={[
+              styles.levelChangeCard,
+              {
+                borderColor:
+                  levelChange.direction === "up" ? "#22C55E" : "#F59E0B",
+              },
+            ]}
+          >
+            <Text style={styles.levelChangeIcon}>
+              {levelChange.direction === "up" ? "⬆" : "⬇"}
+            </Text>
+            <View style={styles.levelChangeInfo}>
+              <Text style={styles.levelChangeTitle}>
+                {levelChange.direction === "up"
+                  ? "Level Up!"
+                  : "Level Adjusted"}
+              </Text>
+              <Text style={styles.levelChangeDesc}>
+                <Text style={{ color: LEVEL_INFO[levelChange.oldLevel].color }}>
+                  {LEVEL_INFO[levelChange.oldLevel].label}
+                </Text>
+                {"  →  "}
+                <Text style={{ color: LEVEL_INFO[levelChange.newLevel].color, fontWeight: "800" }}>
+                  {LEVEL_INFO[levelChange.newLevel].label}
+                </Text>
+              </Text>
+              <Text style={styles.levelChangeHint}>
+                {levelChange.direction === "up"
+                  ? "Your next test will have harder sentences!"
+                  : "We'll give you easier sentences to build confidence."}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {levelChange && levelChange.direction === "same" && (
+          <View style={styles.levelSameCard}>
+            <Text style={[styles.levelSameText, { color: LEVEL_INFO[levelChange.newLevel].color }]}>
+              Level: {LEVEL_INFO[levelChange.newLevel].label} {LEVEL_INFO[levelChange.newLevel].labelAr}
+            </Text>
+            <Text style={styles.levelSameHint}>
+              {result!.score >= 60
+                ? "Score 80+ to advance to the next level"
+                : "Keep practicing to improve your score"}
+            </Text>
+          </View>
+        )}
 
         {/* Sentence Results */}
         <Text style={styles.sectionTitle}>Sentence Breakdown</Text>
@@ -374,12 +448,26 @@ export default function ResultScreen() {
         </View>
 
         {/* Buttons */}
+        {levelChange?.direction === "up" && (
+          <TouchableOpacity
+            style={styles.nextChallengeButton}
+            onPress={() => router.replace("/test")}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.nextChallengeText}>
+              Next Challenge: {LEVEL_INFO[levelChange.newLevel].label} →
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={styles.retryButton}
           onPress={() => router.replace("/test")}
           activeOpacity={0.8}
         >
-          <Text style={styles.retryButtonText}>Try Again</Text>
+          <Text style={styles.retryButtonText}>
+            {levelChange?.direction === "up" ? "Retry This Level" : "Try Again"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -707,5 +795,52 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     fontSize: 13,
     marginTop: 8,
+  },
+
+  // Level change
+  levelChangeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#141414",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 2,
+    gap: 16,
+  },
+  levelChangeIcon: { fontSize: 32 },
+  levelChangeInfo: { flex: 1 },
+  levelChangeTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#E5E5E5",
+    marginBottom: 4,
+  },
+  levelChangeDesc: { fontSize: 16, color: "#6B7280", marginBottom: 6 },
+  levelChangeHint: { fontSize: 13, color: "#4B5563", lineHeight: 18 },
+  levelSameCard: {
+    backgroundColor: "#141414",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+  },
+  levelSameText: { fontSize: 16, fontWeight: "700", marginBottom: 4 },
+  levelSameHint: { fontSize: 13, color: "#4B5563" },
+  nextChallengeButton: {
+    backgroundColor: "#0D2818",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#22C55E",
+  },
+  nextChallengeText: {
+    color: "#22C55E",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });

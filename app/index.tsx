@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,9 +8,17 @@ import {
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { getUserLevel, LEVEL_INFO, type DifficultyLevel } from "../services/levels";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [level, setLevel] = useState<DifficultyLevel>("beginner");
+
+  useEffect(() => {
+    getUserLevel().then(setLevel);
+  }, []);
+
+  const info = LEVEL_INFO[level];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -26,10 +35,16 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pronunciation Test</Text>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Pronunciation Test</Text>
+            <View style={[styles.levelBadge, { borderColor: info.color }]}>
+              <Text style={[styles.levelText, { color: info.color }]}>
+                {info.label}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.cardDescription}>
-            Read 3 short Arabic sentences aloud. We'll analyze your
-            pronunciation and highlight areas to improve.
+            {info.description}. Read 3 sentences aloud and we'll score your pronunciation.
           </Text>
           <View style={styles.cardMeta}>
             <View style={styles.badge}>
@@ -37,6 +52,11 @@ export default function HomeScreen() {
             </View>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>~2 min</Text>
+            </View>
+            <View style={[styles.badge, { borderWidth: 1, borderColor: info.color + "40" }]}>
+              <Text style={[styles.badgeText, { color: info.color }]}>
+                {info.labelAr}
+              </Text>
             </View>
           </View>
         </View>
@@ -62,24 +82,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#0A0A0A",
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: "center",
-  },
-  hero: {
-    alignItems: "center",
-    marginBottom: 48,
-  },
-  logo: {
-    width: 220,
-    height: 160,
-    marginBottom: 12,
-  },
+  safe: { flex: 1, backgroundColor: "#0A0A0A" },
+  container: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
+  hero: { alignItems: "center", marginBottom: 48 },
+  logo: { width: 220, height: 160, marginBottom: 12 },
   tagline: {
     fontSize: 16,
     color: "#6B7280",
@@ -95,33 +101,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#1F1F1F",
   },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#FFFFFF",
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
+  cardTitle: { fontSize: 20, fontWeight: "700", color: "#FFFFFF" },
+  levelBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: "#1A1A1A",
+  },
+  levelText: { fontSize: 13, fontWeight: "700" },
   cardDescription: {
     fontSize: 15,
     lineHeight: 22,
     color: "#6B7280",
     marginBottom: 16,
   },
-  cardMeta: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  cardMeta: { flexDirection: "row", gap: 8 },
   badge: {
     backgroundColor: "#1F1F1F",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  badgeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#9CA3AF",
-  },
+  badgeText: { fontSize: 13, fontWeight: "600", color: "#9CA3AF" },
   startButton: {
     backgroundColor: "#2A2A2A",
     paddingVertical: 18,
@@ -144,9 +152,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#1F1F1F",
   },
-  historyButtonText: {
-    color: "#6B7280",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  historyButtonText: { color: "#6B7280", fontSize: 16, fontWeight: "600" },
 });
