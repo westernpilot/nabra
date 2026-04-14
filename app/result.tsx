@@ -103,13 +103,40 @@ export default function ResultScreen() {
     setRetryLoading(false);
   };
 
-  function highlightSentence(sentence: string, mistakes: string[]) {
-    const words = sentence.split(" ");
-    return words.map((word, i) => {
-      const isMistake = mistakes.includes(word);
+  function highlightSentence(sr: SentenceResult) {
+    const refWords = sr.sentence.split(" ");
+    return refWords.map((word, wi) => {
+      const isMistake = sr.mistakes.includes(word);
+      const wordData = sr.words[wi];
+      const weakSet = new Set(wordData?.weakLetterIndices || []);
+      const hasWeakLetters = weakSet.size > 0;
+
+      if (hasWeakLetters) {
+        return (
+          <Text
+            key={wi}
+            onPress={() => setRetryWord(word)}
+          >
+            {[...word].map((ch, ci) => (
+              <Text
+                key={ci}
+                style={
+                  weakSet.has(ci)
+                    ? styles.weakLetter
+                    : styles.correctWord
+                }
+              >
+                {ch}
+              </Text>
+            ))}
+            <Text style={styles.correctWord}>{" "}</Text>
+          </Text>
+        );
+      }
+
       return (
         <Text
-          key={i}
+          key={wi}
           style={isMistake ? styles.mistakeWord : styles.correctWord}
           onPress={isMistake ? () => setRetryWord(word) : undefined}
         >
@@ -321,7 +348,7 @@ export default function ResultScreen() {
             </View>
 
             <Text style={styles.sentenceText}>
-              {highlightSentence(sr.sentence, sr.mistakes)}
+              {highlightSentence(sr)}
             </Text>
 
             {sr.mistakes.length > 0 && (
@@ -591,6 +618,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textDecorationLine: "underline",
     textDecorationColor: "#EF4444",
+  },
+  weakLetter: {
+    color: "#EF4444",
+    fontWeight: "800",
+    backgroundColor: "#2A1215",
+    borderRadius: 2,
   },
   mistakesSection: {
     marginTop: 16,

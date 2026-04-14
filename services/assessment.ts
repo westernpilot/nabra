@@ -3,6 +3,7 @@ import {
   type PhonemeResult,
   type LetterTip,
   getLetterTipsFromPhonemes,
+  getWeakLetterIndices,
 } from "./arabicGuide";
 
 export interface WordResult {
@@ -10,6 +11,7 @@ export interface WordResult {
   accuracyScore: number;
   errorType: string;
   phonemes: PhonemeResult[];
+  weakLetterIndices: number[];
 }
 
 export interface SentenceResult {
@@ -97,24 +99,30 @@ async function assessSentence(
     const best = data.NBest?.[0];
     const refWords = referenceText.split(" ");
 
-    const azureWords: WordResult[] = (best?.Words || []).map((w: any) => ({
-      word: w.Word,
-      accuracyScore:
-        w.AccuracyScore ??
-        w.PronunciationAssessment?.AccuracyScore ??
-        0,
-      errorType:
-        w.ErrorType ??
-        w.PronunciationAssessment?.ErrorType ??
-        "None",
-      phonemes: (w.Phonemes || []).map((p: any) => ({
+    const azureWords: WordResult[] = (best?.Words || []).map((w: any, wi: number) => {
+      const phonemes: PhonemeResult[] = (w.Phonemes || []).map((p: any) => ({
         phoneme: p.Phoneme,
         accuracyScore:
           p.AccuracyScore ??
           p.PronunciationAssessment?.AccuracyScore ??
           0,
-      })),
-    }));
+      }));
+      const refW = refWords[wi] || "";
+      const weakIndices = getWeakLetterIndices(phonemes, refW, 80);
+      return {
+        word: w.Word,
+        accuracyScore:
+          w.AccuracyScore ??
+          w.PronunciationAssessment?.AccuracyScore ??
+          0,
+        errorType:
+          w.ErrorType ??
+          w.PronunciationAssessment?.ErrorType ??
+          "None",
+        phonemes,
+        weakLetterIndices: [...weakIndices],
+      };
+    });
 
     const mistakes: string[] = [];
 

@@ -283,3 +283,33 @@ export function getLetterTipsFromPhonemes(
 
   return tips;
 }
+
+export function getWeakLetterIndices(
+  phonemes: PhonemeResult[],
+  refWord: string,
+  threshold: number = 80
+): Set<number> {
+  const stripped = stripTashkeel(refWord);
+  const weakBaseIndices = new Set<number>();
+
+  for (let i = 0; i < phonemes.length && i < stripped.length; i++) {
+    if (phonemes[i].accuracyScore < threshold) {
+      weakBaseIndices.add(i);
+    }
+  }
+
+  const weakOriginalIndices = new Set<number>();
+  let baseIdx = 0;
+  for (let origIdx = 0; origIdx < refWord.length; origIdx++) {
+    const ch = refWord[origIdx];
+    const isTashkeel = /[\u064B-\u065F\u0670\u0640]/.test(ch);
+    if (!isTashkeel) {
+      if (weakBaseIndices.has(baseIdx)) {
+        weakOriginalIndices.add(origIdx);
+      }
+      baseIdx++;
+    }
+  }
+
+  return weakOriginalIndices;
+}

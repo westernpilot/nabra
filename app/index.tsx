@@ -12,7 +12,7 @@ import { getUserLevel, LEVEL_INFO, type DifficultyLevel } from "../services/leve
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [level, setLevel] = useState<DifficultyLevel>("beginner");
+  const [level, setLevel] = useState<DifficultyLevel>("beginner_1");
 
   useEffect(() => {
     getUserLevel().then(setLevel);

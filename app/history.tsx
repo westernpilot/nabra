@@ -11,9 +11,12 @@ import { useRouter } from "expo-router";
 import {
   getHistory,
   clearHistory,
+  getProblemLetters,
   type SessionRecord,
+  type ProblemLetter,
 } from "../services/progress";
 import { LEVEL_INFO, type DifficultyLevel } from "../services/levels";
+import { ARABIC_PRONUNCIATION_GUIDE, ZONE_INFO } from "../services/arabicGuide";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -61,11 +64,15 @@ const barStyles = StyleSheet.create({
 export default function HistoryScreen() {
   const router = useRouter();
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [problems, setProblems] = useState<ProblemLetter[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getHistory()
-      .then((h) => setSessions(h.reverse()))
+    Promise.all([getHistory(), getProblemLetters()])
+      .then(([h, p]) => {
+        setSessions(h.reverse());
+        setProblems(p);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -167,36 +174,85 @@ export default function HistoryScreen() {
               </View>
             )}
 
-            {/* Weak letters summary */}
-            {(() => {
-              const allLetters: Record<string, number> = {};
-              sessions.forEach((s) =>
-                s.weakLetters.forEach((l) => {
-                  allLetters[l] = (allLetters[l] || 0) + 1;
-                })
-              );
-              const sorted = Object.entries(allLetters)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 8);
-
-              if (sorted.length === 0) return null;
-
-              return (
-                <View style={styles.weakCard}>
-                  <Text style={styles.sectionTitle}>Most Challenging Letters</Text>
-                  <View style={styles.letterGrid}>
-                    {sorted.map(([letter, count]) => (
-                      <View key={letter} style={styles.letterChip}>
-                        <Text style={styles.letterChipText}>{letter}</Text>
-                        <Text style={styles.letterChipCount}>
-                          {count}x
-                        </Text>
+            {/* Problem letters analysis */}
+            {problems.length > 0 && (
+              <View style={styles.weakCard}>
+                <Text style={styles.sectionTitle}>Letters You Need to Work On</Text>
+                <Text style={styles.weakSubtitle}>
+                  These letters keep coming up across your sessions
+                </Text>
+                {problems.map((p) => {
+                  const guide = ARABIC_PRONUNCIATION_GUIDE[p.letter];
+                  const zone = guide ? ZONE_INFO[guide.zone] : null;
+                  const pct = Math.round(p.errorRate * 100);
+                  return (
+                    <TouchableOpacity
+                      key={p.letter}
+                      style={styles.problemCard}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/drill",
+                          params: { letter: p.letter },
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.problemLeft}>
+                        <View
+                          style={[
+                            styles.problemCircle,
+                            { borderColor: zone?.color || "#EF4444" },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.problemLetter,
+                              { color: zone?.color || "#EF4444" },
+                            ]}
+                          >
+                            {p.letter}
+                          </Text>
+                        </View>
+                        <View style={styles.problemInfo}>
+                          <Text style={styles.problemName}>
+                            {guide?.name || p.letter}
+                          </Text>
+                          <View style={styles.problemStatsRow}>
+                            <Text style={styles.problemStat}>
+                              Wrong {pct}% of the time
+                            </Text>
+                            {p.streak >= 3 && (
+                              <View style={styles.streakBadge}>
+                                <Text style={styles.streakText}>
+                                  {p.streak} sessions in a row
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                          <View style={styles.problemBar}>
+                            <View
+                              style={[
+                                styles.problemBarFill,
+                                {
+                                  width: `${pct}%`,
+                                  backgroundColor:
+                                    pct >= 70
+                                      ? "#EF4444"
+                                      : pct >= 40
+                                      ? "#F59E0B"
+                                      : "#3B82F6",
+                                },
+                              ]}
+                            />
+                          </View>
+                        </View>
                       </View>
-                    ))}
-                  </View>
-                </View>
-              );
-            })()}
+                      <Text style={styles.problemArrow}>→</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
 
             {/* Session list */}
             <Text style={styles.sectionTitle}>Session History</Text>
@@ -435,4 +491,46 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   clearBtnText: { color: "#EF4444", fontSize: 15, fontWeight: "600" },
+
+  weakSubtitle: { color: "#4B5563", fontSize: 13, marginTop: -8, marginBottom: 16 },
+  problemCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1A1A1A",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+  },
+  problemLeft: { flexDirection: "row", alignItems: "center", flex: 1, gap: 12 },
+  problemCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2A2A2A",
+  },
+  problemLetter: { fontSize: 24, fontWeight: "800" },
+  problemInfo: { flex: 1 },
+  problemName: { fontSize: 15, fontWeight: "700", color: "#E5E5E5", marginBottom: 4 },
+  problemStatsRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  problemStat: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
+  streakBadge: {
+    backgroundColor: "#2A1215",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  streakText: { fontSize: 11, color: "#EF4444", fontWeight: "600" },
+  problemBar: {
+    height: 6,
+    backgroundColor: "#1F1F1F",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  problemBarFill: { height: "100%", borderRadius: 3 },
+  problemArrow: { fontSize: 18, color: "#4B5563", fontWeight: "700", marginLeft: 8 },
 });
