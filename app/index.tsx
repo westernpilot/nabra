@@ -6,23 +6,82 @@ import {
   StyleSheet,
   SafeAreaView,
   Image,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getUserLevel, LEVEL_INFO, type DifficultyLevel } from "../services/levels";
+import { getAuthState, signOut, type AuthState } from "../services/auth";
+import { pushLocalToCloud } from "../services/cloudSync";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [level, setLevel] = useState<DifficultyLevel>("beginner_1");
+  const [auth, setAuth] = useState<AuthState>(getAuthState());
 
   useEffect(() => {
     getUserLevel().then(setLevel);
+    setAuth(getAuthState());
   }, []);
 
   const info = LEVEL_INFO[level];
+  const user = auth.status === "signed_in" ? auth.user : null;
+
+  function handleSignOut() {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await signOut();
+          router.replace("/auth");
+        },
+      },
+    ]);
+  }
+
+  async function handleSignIn() {
+    await pushLocalToCloud();
+    router.push("/auth");
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        {/* Account bar */}
+        <View style={styles.accountBar}>
+          {user ? (
+            <TouchableOpacity onPress={handleSignOut} activeOpacity={0.7}>
+              <View style={styles.accountRow}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {(user.displayName || user.email || "U")[0].toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.accountName} numberOfLines={1}>
+                    {user.displayName || "User"}
+                  </Text>
+                  <Text style={styles.accountEmail} numberOfLines={1}>
+                    {user.email}
+                  </Text>
+                </View>
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
+              <View style={styles.accountRow}>
+                <View style={[styles.avatar, { backgroundColor: "#1F1F1F" }]}>
+                  <Text style={[styles.avatarText, { color: "#6B7280" }]}>G</Text>
+                </View>
+                <Text style={styles.guestLabel}>Guest Mode</Text>
+                <Text style={styles.signInText}>Sign In</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <View style={styles.hero}>
           <Image
             source={require("../assets/logo-white.png")}
@@ -84,6 +143,33 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#000000" },
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
+  accountBar: {
+    position: "absolute",
+    top: 12,
+    left: 24,
+    right: 24,
+    zIndex: 10,
+  },
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 8,
+  },
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#2A2A2A",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: { color: "#E5E5E5", fontSize: 14, fontWeight: "700" },
+  accountName: { color: "#E5E5E5", fontSize: 13, fontWeight: "600" },
+  accountEmail: { color: "#4B5563", fontSize: 11 },
+  guestLabel: { color: "#6B7280", fontSize: 14, fontWeight: "500", flex: 1 },
+  signOutText: { color: "#EF4444", fontSize: 13, fontWeight: "600" },
+  signInText: { color: "#60A5FA", fontSize: 13, fontWeight: "600" },
   hero: { alignItems: "center", marginBottom: 48 },
   logo: { width: 220, height: 160, marginBottom: 12 },
   tagline: {

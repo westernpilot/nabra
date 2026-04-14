@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { syncLevelToCloud } from "./cloudSync";
 
 const LEVEL_KEY = "nabra_user_level";
 
@@ -417,4 +418,5 @@ export async function getUserLevel(): Promise<DifficultyLevel> {
 
 export async function setUserLevel(level: DifficultyLevel): Promise<void> {
   await AsyncStorage.setItem(LEVEL_KEY, level);
+  syncLevelToCloud(level).catch(() => {});
 }

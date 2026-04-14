@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { AssessmentResult } from "./assessment";
 import { getUserLevel } from "./levels";
+import { syncProgressToCloud, syncLetterStatsToCloud } from "./cloudSync";
 
 const STORAGE_KEY = "nabra_progress";
 const LETTER_STATS_KEY = "nabra_letter_stats";
@@ -50,6 +51,8 @@ export async function saveSession(result: AssessmentResult): Promise<void> {
   history.push(record);
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 
+  syncProgressToCloud(record).catch(() => {});
+
   await updateLetterStats([...new Set(allSeenLetters)], [...new Set(allWeakLetters)]);
 }
 
@@ -77,6 +80,8 @@ async function updateLetterStats(
   }
 
   await AsyncStorage.setItem(LETTER_STATS_KEY, JSON.stringify(stats));
+
+  syncLetterStatsToCloud(stats).catch(() => {});
 }
 
 export async function getLetterStats(): Promise<LetterStats> {
