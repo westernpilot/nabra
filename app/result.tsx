@@ -32,6 +32,7 @@ import {
   LEVEL_INFO,
   type DifficultyLevel,
 } from "../services/levels";
+import AICoach from "../components/AICoach";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -180,8 +181,14 @@ export default function ResultScreen() {
 
   const scoreColor = getScoreColor(result.score);
 
+  const currentLevel = levelChange?.newLevel || "beginner_1";
+
   return (
     <SafeAreaView style={styles.safe}>
+      {result && (
+        <AICoach result={result} level={currentLevel} />
+      )}
+
       {/* Retry word modal */}
       <Modal
         visible={retryWord !== null}

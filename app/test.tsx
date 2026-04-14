@@ -19,22 +19,50 @@ import {
   LEVEL_INFO,
   type DifficultyLevel,
 } from "../services/levels";
+import { getProblemLetters } from "../services/progress";
+import { generateTargetedSentences } from "../services/ai";
 
 export default function TestScreen() {
   const router = useRouter();
   const [level, setLevel] = useState<DifficultyLevel | null>(null);
   const [sentences, setSentences] = useState<string[]>([]);
+  const [aiGenerated, setAiGenerated] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recordings, setRecordings] = useState<string[]>([]);
   const [currentRecordingUri, setCurrentRecordingUri] = useState<string | null>(null);
+  const [loadingText, setLoadingText] = useState("Loading...");
 
   useEffect(() => {
-    getUserLevel().then((l) => {
+    (async () => {
+      const l = await getUserLevel();
       setLevel(l);
+
+      try {
+        const problems = await getProblemLetters();
+        if (problems.length >= 2) {
+          setLoadingText("AI is creating sentences for your weak letters...");
+          const weakLetters = problems.slice(0, 4).map((p) => p.letter);
+          const aiSentences = await generateTargetedSentences({
+            weakLetters,
+            level: l,
+            count: 3,
+          });
+
+          if (aiSentences.length === 3) {
+            setSentences(aiSentences);
+            storeSentences(aiSentences);
+            setAiGenerated(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("AI sentence generation failed, using bank:", e);
+      }
+
       const s = getSentencesForLevel(l);
       setSentences(s);
       storeSentences(s);
-    });
+    })();
   }, []);
 
   const isLastSentence = currentIndex === sentences.length - 1;
@@ -64,6 +92,7 @@ export default function TestScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#E5E5E5" />
+          <Text style={styles.loadingLabel}>{loadingText}</Text>
         </View>
       </SafeAreaView>
     );
@@ -107,6 +136,11 @@ export default function TestScreen() {
             </Text>
             <Text style={styles.levelAr}>{info.labelAr}</Text>
           </View>
+          {aiGenerated && (
+            <View style={styles.aiBadge}>
+              <Text style={styles.aiBadgeText}>✦ AI Targeted</Text>
+            </View>
+          )}
         </View>
 
         {/* Sentence Display */}
@@ -146,6 +180,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 16,
+  },
+  loadingLabel: {
+    color: "#6B7280",
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+    paddingHorizontal: 40,
   },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
   header: {
@@ -173,7 +215,21 @@ const styles = StyleSheet.create({
   progressDotActive: { backgroundColor: "#E5E5E5", width: 48 },
   progressDotDone: { backgroundColor: "#22C55E" },
   counter: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
-  levelRow: { alignItems: "center", marginBottom: 8 },
+  levelRow: { alignItems: "center", marginBottom: 8, gap: 8 },
+  aiBadge: {
+    backgroundColor: "#8B5CF620",
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#8B5CF640",
+  },
+  aiBadgeText: {
+    color: "#A78BFA",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
   levelBadge: {
     flexDirection: "row",
     alignItems: "center",

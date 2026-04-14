@@ -36,6 +36,7 @@ yarn-error.*
 # API keys
 services/config.ts
 services/firebase.ts
+services/aiConfig.ts
 
 # typescript
 *.tsbuildinfo
