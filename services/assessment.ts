@@ -100,6 +100,15 @@ async function assessSentence(
     const refWords = referenceText.split(" ");
 
     const azureWords: WordResult[] = (best?.Words || []).map((w: any, wi: number) => {
+      const wordScore =
+        w.AccuracyScore ??
+        w.PronunciationAssessment?.AccuracyScore ??
+        0;
+      const errorType =
+        w.ErrorType ??
+        w.PronunciationAssessment?.ErrorType ??
+        "None";
+
       const phonemes: PhonemeResult[] = (w.Phonemes || []).map((p: any) => ({
         phoneme: p.Phoneme,
         accuracyScore:
@@ -107,18 +116,19 @@ async function assessSentence(
           p.PronunciationAssessment?.AccuracyScore ??
           0,
       }));
+
+      const wordEntirelyMissed =
+        errorType === "Omission" || wordScore < 20;
+
       const refW = refWords[wi] || "";
-      const weakIndices = getWeakLetterIndices(phonemes, refW, 80);
+      const weakIndices = wordEntirelyMissed
+        ? new Set<number>()
+        : getWeakLetterIndices(phonemes, refW, 80);
+
       return {
         word: w.Word,
-        accuracyScore:
-          w.AccuracyScore ??
-          w.PronunciationAssessment?.AccuracyScore ??
-          0,
-        errorType:
-          w.ErrorType ??
-          w.PronunciationAssessment?.ErrorType ??
-          "None",
+        accuracyScore: wordScore,
+        errorType,
         phonemes,
         weakLetterIndices: [...weakIndices],
       };
@@ -138,11 +148,15 @@ async function assessSentence(
       mistakes.push(refWords[i]);
     }
 
-    // Scan ALL words for weak phonemes, not just mistakes
     const allLetterTips: LetterTip[] = [];
     for (let i = 0; i < azureWords.length && i < refWords.length; i++) {
+      const w = azureWords[i];
+      const wordEntirelyMissed =
+        w.errorType === "Omission" || w.accuracyScore < 20;
+      if (wordEntirelyMissed) continue;
+
       const tips = getLetterTipsFromPhonemes(
-        azureWords[i].phonemes,
+        w.phonemes,
         refWords[i],
         80
       );

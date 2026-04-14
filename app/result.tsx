@@ -376,7 +376,7 @@ export default function ResultScreen() {
                 <Text style={styles.letterTipsTitle}>
                   Letters to practice:
                 </Text>
-                {sr.letterTips.map((tip: LetterTip, i: number) => {
+                {sr.letterTips.slice(0, 3).map((tip: LetterTip, i: number) => {
                   const zone = ZONE_INFO[tip.zone];
                   const langNote = getLanguageNote(langCode, tip.letter);
                   return (
