@@ -82,7 +82,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0A0A" },
+  safe: { flex: 1, backgroundColor: "#000000" },
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
   hero: { alignItems: "center", marginBottom: 48 },
   logo: { width: 220, height: 160, marginBottom: 12 },

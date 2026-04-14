@@ -518,7 +518,7 @@ export default function ResultScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0A0A" },
+  safe: { flex: 1, backgroundColor: "#000000" },
   loadingContainer: {
     flex: 1,
     alignItems: "center",

@@ -192,7 +192,7 @@ export default function DrillScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0A0A" },
+  safe: { flex: 1, backgroundColor: "#000000" },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   emptyText: { color: "#6B7280", fontSize: 16, marginBottom: 20 },

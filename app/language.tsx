@@ -166,7 +166,7 @@ export default function LanguageScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#0A0A0A",
+    backgroundColor: "#000000",
   },
   container: {
     flex: 1,
