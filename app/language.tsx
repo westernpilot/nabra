@@ -9,10 +9,11 @@ import {
   FlatList,
   Animated,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   LANGUAGES,
   setSelectedLanguage,
+  getSelectedLanguage,
   type Language,
 } from "../services/languages";
 import { useTheme } from "../services/theme";
@@ -86,8 +87,12 @@ function LanguageCard({
 
 export default function LanguageScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ edit?: string }>();
+  const isEdit = params.edit === "1";
   const { colors } = useTheme();
-  const [selected, setSelected] = useState<Language | null>(null);
+  const [selected, setSelected] = useState<Language | null>(
+    isEdit ? getSelectedLanguage() : null
+  );
   const [search, setSearch] = useState("");
 
   const filtered = LANGUAGES.filter(
@@ -99,12 +104,25 @@ export default function LanguageScreen() {
   const handleContinue = async () => {
     if (!selected) return;
     setSelectedLanguage(selected);
-    router.replace("/reminder");
+    if (isEdit) {
+      router.back();
+    } else {
+      router.replace("/reminder");
+    }
   };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
+        {isEdit && (
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[styles.backBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.backBtnText, { color: colors.text }]}>←</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.header}>
           <Text style={[styles.arabicTitle, { color: colors.text }]}>ما لغتك الأم؟</Text>
           <Text style={[styles.title, { color: colors.textSecondary }]}>What's your native language?</Text>
@@ -159,7 +177,9 @@ export default function LanguageScreen() {
         >
           <Text style={[styles.continueButtonText, { color: colors.textSecondary }]}>
             {selected
-              ? `Continue as ${selected.name} speaker`
+              ? isEdit
+                ? `Save · ${selected.name}`
+                : `Continue as ${selected.name} speaker`
               : "Select your language"}
           </Text>
         </TouchableOpacity>
@@ -301,4 +321,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    marginBottom: 8,
+    alignSelf: "flex-start",
+  },
+  backBtnText: { fontSize: 20, fontWeight: "700" },
 });

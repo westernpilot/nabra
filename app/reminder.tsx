@@ -8,7 +8,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "../services/theme";
@@ -32,9 +32,19 @@ const MESSAGES = [
 
 export default function ReminderScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ edit?: string }>();
+  const isEdit = params.edit === "1";
   const { colors } = useTheme();
   const [selected, setSelected] = useState<number | null>(null);
   const [setting, setSetting] = useState(false);
+
+  function done() {
+    if (isEdit) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  }
 
   async function scheduleReminder() {
     if (selected === null) return;
@@ -73,12 +83,12 @@ export default function ReminderScreen() {
         label: opt.label,
       }));
 
-      await markOnboardingComplete();
-      router.replace("/");
+      if (!isEdit) await markOnboardingComplete();
+      done();
     } catch (e) {
       console.warn("Notification scheduling failed:", e);
-      await markOnboardingComplete();
-      router.replace("/");
+      if (!isEdit) await markOnboardingComplete();
+      done();
     } finally {
       setSetting(false);
     }
@@ -86,13 +96,23 @@ export default function ReminderScreen() {
 
   async function skipAndContinue() {
     await AsyncStorage.setItem(REMINDER_KEY, "skipped");
-    await markOnboardingComplete();
-    router.replace("/");
+    await Notifications.cancelAllScheduledNotificationsAsync().catch(() => {});
+    if (!isEdit) await markOnboardingComplete();
+    done();
   }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
+        {isEdit && (
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[styles.backBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.backBtnText, { color: colors.text }]}>←</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.topSection}>
           <Text style={styles.emoji}>⏰</Text>
           <Text style={[styles.title, { color: colors.text }]}>Set a Daily Reminder</Text>
@@ -158,7 +178,9 @@ export default function ReminderScreen() {
             onPress={skipAndContinue}
             activeOpacity={0.8}
           >
-            <Text style={[styles.skipButtonText, { color: colors.textDim }]}>Skip for now</Text>
+            <Text style={[styles.skipButtonText, { color: colors.textDim }]}>
+              {isEdit ? "Turn off reminders" : "Skip for now"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -263,4 +285,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
   },
+  backBtn: {
+    position: "absolute",
+    top: 20,
+    left: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    zIndex: 10,
+  },
+  backBtnText: { fontSize: 20, fontWeight: "700" },
 });

@@ -354,7 +354,7 @@ export function getGameLevel(level: number): GameLevel {
   return { ...found };
 }
 
-interface GameProgress {
+export interface GameProgress {
   currentLevel: number;
   levels: { [level: number]: { stars: number; score: number } };
 }

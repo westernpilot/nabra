@@ -559,7 +559,7 @@ export default function ResultScreen() {
         <TouchableOpacity
           style={styles.historyButton}
           onPress={() =>
-            gameLevelNum ? router.replace("/levels") : router.push("/history")
+            gameLevelNum ? router.replace("/levels") : router.push("/progress")
           }
           activeOpacity={0.8}
         >
