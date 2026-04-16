@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, flexGrow: 1, justifyContent: "center" },
   hero: { alignItems: "center", marginBottom: 24 },
-  logo: { width: 200, height: 140, marginBottom: 4 },
+  logo: { width: 260, height: 200, marginBottom: 4 },
   tagline: {
     fontSize: 15,
     textAlign: "center",

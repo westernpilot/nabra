@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   hero: { alignItems: "center" },
-  logo: { width: 180, height: 130, marginBottom: 20 },
+  logo: { width: 230, height: 180, marginBottom: 20 },
   title: {
     fontSize: 28,
     fontWeight: "800",
