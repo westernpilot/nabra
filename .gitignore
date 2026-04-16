@@ -45,3 +45,7 @@ services/ai.ts
 # generated native folders
 /ios
 /android
+
+# EAS / Play Store secrets
+play-service-account.json
+google-services.json

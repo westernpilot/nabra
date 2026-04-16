@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "nabra",
+    "name": "Nabra",
     "slug": "nabra",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -13,15 +13,29 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nabra.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Nabra uses your microphone to record Arabic pronunciation for real-time feedback.",
+        "NSSpeechRecognitionUsageDescription": "Nabra analyzes your speech to score your Arabic pronunciation."
+      }
     },
     "android": {
+      "package": "com.nabra.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,7 +43,20 @@
     "scheme": "nabra",
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Nabra uses your microphone to record Arabic pronunciation for real-time feedback."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0A0A0A"
+        }
+      ]
     ]
   }
 }
