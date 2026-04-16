@@ -9,24 +9,20 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { getUserLevel, LEVEL_INFO, type DifficultyLevel } from "../services/levels";
 import { getAuthState, signOut, type AuthState } from "../services/auth";
 import { pushLocalToCloud } from "../services/cloudSync";
 import { getStreak } from "../services/streak";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [level, setLevel] = useState<DifficultyLevel>("beginner_1");
   const [auth, setAuth] = useState<AuthState>(getAuthState());
   const [streak, setStreak] = useState({ currentStreak: 0, longestStreak: 0, totalDays: 0 });
 
   useEffect(() => {
-    getUserLevel().then(setLevel);
     setAuth(getAuthState());
     getStreak().then(setStreak);
   }, []);
 
-  const info = LEVEL_INFO[level];
   const user = auth.status === "signed_in" ? auth.user : null;
 
   function handleSignOut() {
@@ -44,8 +40,8 @@ export default function HomeScreen() {
   }
 
   async function handleSignIn() {
-    await pushLocalToCloud();
-    router.push("/auth");
+    await signOut();
+    router.replace("/auth");
   }
 
   return (
@@ -115,39 +111,28 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Pronunciation Test</Text>
-            <View style={[styles.levelBadge, { borderColor: info.color }]}>
-              <Text style={[styles.levelText, { color: info.color }]}>
-                {info.label}
-              </Text>
+        {/* Play Levels */}
+        <TouchableOpacity
+          style={styles.playButton}
+          onPress={() => router.push("/levels")}
+          activeOpacity={0.8}
+        >
+          <View style={styles.playButtonInner}>
+            <Text style={styles.playIcon}>▶</Text>
+            <View>
+              <Text style={styles.playButtonTitle}>Play Levels</Text>
+              <Text style={styles.playButtonSub}>30 levels · 5 sentences each · Earn stars</Text>
             </View>
           </View>
-          <Text style={styles.cardDescription}>
-            {info.description}. Read 3 sentences aloud and we'll score your pronunciation.
-          </Text>
-          <View style={styles.cardMeta}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>3 sentences</Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>~2 min</Text>
-            </View>
-            <View style={[styles.badge, { borderWidth: 1, borderColor: info.color + "40" }]}>
-              <Text style={[styles.badgeText, { color: info.color }]}>
-                {info.labelAr}
-              </Text>
-            </View>
-          </View>
-        </View>
+        </TouchableOpacity>
 
+        {/* Quick Test */}
         <TouchableOpacity
           style={styles.startButton}
           onPress={() => router.push("/language")}
           activeOpacity={0.8}
         >
-          <Text style={styles.startButtonText}>Start Test</Text>
+          <Text style={styles.startButtonText}>Quick Test</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -218,43 +203,41 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.3,
   },
-  card: {
+  playButton: {
     backgroundColor: "#141414",
     borderRadius: 20,
-    padding: 24,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: "#1F1F1F",
+    padding: 22,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: "#22C55E40",
   },
-  cardHeader: {
+  playButtonInner: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    gap: 16,
   },
-  cardTitle: { fontSize: 20, fontWeight: "700", color: "#FFFFFF" },
-  levelBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    backgroundColor: "#1A1A1A",
+  playIcon: {
+    fontSize: 24,
+    color: "#22C55E",
+    width: 50,
+    height: 50,
+    lineHeight: 50,
+    textAlign: "center",
+    backgroundColor: "#0D2818",
+    borderRadius: 25,
+    overflow: "hidden",
   },
-  levelText: { fontSize: 13, fontWeight: "700" },
-  cardDescription: {
-    fontSize: 15,
-    lineHeight: 22,
+  playButtonTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: 3,
+  },
+  playButtonSub: {
+    fontSize: 13,
     color: "#6B7280",
-    marginBottom: 16,
+    fontWeight: "500",
   },
-  cardMeta: { flexDirection: "row", gap: 8 },
-  badge: {
-    backgroundColor: "#1F1F1F",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  badgeText: { fontSize: 13, fontWeight: "600", color: "#9CA3AF" },
   startButton: {
     backgroundColor: "#2A2A2A",
     paddingVertical: 18,

@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import WordWithAudio from "../components/WordWithAudio";
 import RecordButton from "../components/RecordButton";
 import {
@@ -31,6 +31,8 @@ import {
   calculateNewLevel,
   LEVEL_INFO,
   type DifficultyLevel,
+  saveGameLevelResult,
+  getTierForLevel,
 } from "../services/levels";
 import AICoach from "../components/AICoach";
 import { recordActivity } from "../services/streak";
@@ -49,11 +51,15 @@ function getScoreLabel(score: number): string {
 
 export default function ResultScreen() {
   const router = useRouter();
+  const { gameLevel: gameLevelParam } = useLocalSearchParams<{ gameLevel?: string }>();
+  const gameLevelNum = gameLevelParam ? parseInt(gameLevelParam, 10) : null;
+
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [retryWord, setRetryWord] = useState<string | null>(null);
   const [retryLoading, setRetryLoading] = useState(false);
   const [retryScore, setRetryScore] = useState<number | null>(null);
+  const [gameResult, setGameResult] = useState<{ stars: number; unlocked: boolean } | null>(null);
   const [levelChange, setLevelChange] = useState<{
     oldLevel: DifficultyLevel;
     newLevel: DifficultyLevel;
@@ -70,6 +76,11 @@ export default function ResultScreen() {
         setResult(r);
         await saveSession(r);
         await recordActivity();
+
+        if (gameLevelNum) {
+          const gr = await saveGameLevelResult(gameLevelNum, r.score);
+          setGameResult(gr);
+        }
 
         const { newLevel, direction } = calculateNewLevel(oldLevel, r.score);
         setLevelChange({ oldLevel, newLevel, direction });
@@ -483,35 +494,76 @@ export default function ResultScreen() {
           <Text style={styles.feedbackText}>{result.feedback}</Text>
         </View>
 
+        {/* Game level result */}
+        {gameLevelNum && gameResult && (
+          <View style={styles.gameResultCard}>
+            <Text style={styles.gameResultTitle}>
+              Level {gameLevelNum} {gameResult.stars > 0 ? "Complete!" : "Try Again"}
+            </Text>
+            <View style={styles.starsRow}>
+              {[1, 2, 3].map((i) => (
+                <Text
+                  key={i}
+                  style={[
+                    styles.starIcon,
+                    { opacity: i <= gameResult.stars ? 1 : 0.15 },
+                  ]}
+                >
+                  ★
+                </Text>
+              ))}
+            </View>
+            {gameResult.unlocked && (
+              <Text style={styles.unlockedText}>Level {gameLevelNum + 1} Unlocked!</Text>
+            )}
+          </View>
+        )}
+
         {/* Buttons */}
-        {levelChange?.direction === "up" && (
+        {gameLevelNum && gameResult?.unlocked && (
           <TouchableOpacity
             style={styles.nextChallengeButton}
-            onPress={() => router.replace("/test")}
+            onPress={() =>
+              router.replace({
+                pathname: "/play",
+                params: { level: String(gameLevelNum + 1) },
+              })
+            }
             activeOpacity={0.8}
           >
             <Text style={styles.nextChallengeText}>
-              Next Challenge: {LEVEL_INFO[levelChange.newLevel].label} →
+              Next Level: {gameLevelNum + 1} →
             </Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
           style={styles.retryButton}
-          onPress={() => router.replace("/test")}
+          onPress={() =>
+            gameLevelNum
+              ? router.replace({
+                  pathname: "/play",
+                  params: { level: String(gameLevelNum) },
+                })
+              : router.replace("/test")
+          }
           activeOpacity={0.8}
         >
           <Text style={styles.retryButtonText}>
-            {levelChange?.direction === "up" ? "Retry This Level" : "Try Again"}
+            {gameLevelNum ? "Retry Level" : "Try Again"}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.historyButton}
-          onPress={() => router.push("/history")}
+          onPress={() =>
+            gameLevelNum ? router.replace("/levels") : router.push("/history")
+          }
           activeOpacity={0.8}
         >
-          <Text style={styles.historyButtonText}>View Progress</Text>
+          <Text style={styles.historyButtonText}>
+            {gameLevelNum ? "All Levels" : "View Progress"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -871,6 +923,36 @@ const styles = StyleSheet.create({
   },
   levelSameText: { fontSize: 16, fontWeight: "700", marginBottom: 4 },
   levelSameHint: { fontSize: 13, color: "#4B5563" },
+  gameResultCard: {
+    backgroundColor: "#141414",
+    borderRadius: 20,
+    padding: 28,
+    alignItems: "center",
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+  },
+  gameResultTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#E5E5E5",
+    marginBottom: 16,
+  },
+  starsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+  },
+  starIcon: {
+    fontSize: 44,
+    color: "#F59E0B",
+  },
+  unlockedText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#22C55E",
+    marginTop: 8,
+  },
   nextChallengeButton: {
     backgroundColor: "#0D2818",
     paddingVertical: 18,
