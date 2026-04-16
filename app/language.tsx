@@ -10,12 +10,12 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   LANGUAGES,
   setSelectedLanguage,
   type Language,
 } from "../services/languages";
+import { useTheme } from "../services/theme";
 
 function LanguageCard({
   lang,
@@ -28,6 +28,7 @@ function LanguageCard({
   onPress: () => void;
   index: number;
 }) {
+  const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
@@ -54,29 +55,28 @@ function LanguageCard({
       style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
     >
       <TouchableOpacity
-        style={[styles.langCard, selected && styles.langCardSelected]}
+        style={[
+          styles.langCard,
+          {
+            backgroundColor: selected ? colors.cardAlt : colors.card,
+            borderColor: selected ? colors.primary : colors.border,
+          },
+        ]}
         onPress={onPress}
         activeOpacity={0.7}
       >
         <Text style={styles.langFlag}>{lang.flag}</Text>
         <View style={styles.langInfo}>
-          <Text
-            style={[styles.langName, selected && styles.langNameSelected]}
-          >
+          <Text style={[styles.langName, { color: colors.textSecondary }]}>
             {lang.name}
           </Text>
-          <Text
-            style={[
-              styles.langNative,
-              selected && styles.langNativeSelected,
-            ]}
-          >
+          <Text style={[styles.langNative, { color: colors.textDim }]}>
             {lang.nativeName}
           </Text>
         </View>
         {selected && (
-          <View style={styles.checkCircle}>
-            <Text style={styles.checkMark}>✓</Text>
+          <View style={[styles.checkCircle, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.checkMark, { color: colors.primaryText }]}>✓</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -86,6 +86,7 @@ function LanguageCard({
 
 export default function LanguageScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [selected, setSelected] = useState<Language | null>(null);
   const [search, setSearch] = useState("");
 
@@ -98,38 +99,33 @@ export default function LanguageScreen() {
   const handleContinue = async () => {
     if (!selected) return;
     setSelectedLanguage(selected);
-    const reminderSet = await AsyncStorage.getItem("nabra_reminder_set");
-    if (reminderSet) {
-      router.replace("/test");
-    } else {
-      router.replace("/reminder");
-    }
+    router.replace("/reminder");
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.arabicTitle}>ما لغتك الأم؟</Text>
-          <Text style={styles.title}>What's your native language?</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.arabicTitle, { color: colors.text }]}>ما لغتك الأم؟</Text>
+          <Text style={[styles.title, { color: colors.textSecondary }]}>What's your native language?</Text>
+          <Text style={[styles.subtitle, { color: colors.textDim }]}>
             This helps us tailor lessons to your background
           </Text>
         </View>
 
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.inputText }]}
             placeholder="Search languages..."
-            placeholderTextColor="#4B5563"
+            placeholderTextColor={colors.placeholder}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <Text style={styles.clearButton}>✕</Text>
+              <Text style={[styles.clearButton, { color: colors.textDim }]}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -152,13 +148,16 @@ export default function LanguageScreen() {
         <TouchableOpacity
           style={[
             styles.continueButton,
-            !selected && styles.continueButtonDisabled,
+            {
+              backgroundColor: selected ? colors.borderStrong : colors.cardAlt,
+              borderColor: selected ? colors.borderStrong : colors.border,
+            },
           ]}
           onPress={handleContinue}
           disabled={!selected}
           activeOpacity={0.8}
         >
-          <Text style={styles.continueButtonText}>
+          <Text style={[styles.continueButtonText, { color: colors.textSecondary }]}>
             {selected
               ? `Continue as ${selected.name} speaker`
               : "Select your language"}

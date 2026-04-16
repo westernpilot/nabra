@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "../services/theme";
+import { markOnboardingComplete } from "../services/onboarding";
 
 const REMINDER_KEY = "nabra_reminder_set";
 
@@ -30,6 +32,7 @@ const MESSAGES = [
 
 export default function ReminderScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [selected, setSelected] = useState<number | null>(null);
   const [setting, setSetting] = useState(false);
 
@@ -70,39 +73,47 @@ export default function ReminderScreen() {
         label: opt.label,
       }));
 
-      router.replace("/test");
+      await markOnboardingComplete();
+      router.replace("/");
     } catch (e) {
       console.warn("Notification scheduling failed:", e);
-      router.replace("/test");
+      await markOnboardingComplete();
+      router.replace("/");
     } finally {
       setSetting(false);
     }
   }
 
-  function skipAndContinue() {
-    AsyncStorage.setItem(REMINDER_KEY, "skipped");
-    router.replace("/test");
+  async function skipAndContinue() {
+    await AsyncStorage.setItem(REMINDER_KEY, "skipped");
+    await markOnboardingComplete();
+    router.replace("/");
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         <View style={styles.topSection}>
           <Text style={styles.emoji}>⏰</Text>
-          <Text style={styles.title}>Set a Daily Reminder</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Set a Daily Reminder</Text>
+          <Text style={[styles.subtitle, { color: colors.textDim }]}>
             Consistent practice builds streaks and improves pronunciation faster
           </Text>
         </View>
 
         <View style={styles.optionsSection}>
-          <Text style={styles.optionsLabel}>When should we remind you?</Text>
+          <Text style={[styles.optionsLabel, { color: colors.textMuted }]}>
+            When should we remind you?
+          </Text>
           {TIME_OPTIONS.map((opt, i) => (
             <TouchableOpacity
               key={i}
               style={[
                 styles.optionCard,
-                selected === i && styles.optionCardSelected,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: selected === i ? "#F59E0B" : colors.border,
+                },
               ]}
               onPress={() => setSelected(i)}
               activeOpacity={0.7}
@@ -111,15 +122,15 @@ export default function ReminderScreen() {
               <View style={styles.optionInfo}>
                 <Text style={[
                   styles.optionTime,
-                  selected === i && styles.optionTimeSelected,
+                  { color: selected === i ? "#F59E0B" : colors.textSecondary },
                 ]}>
                   {opt.label}
                 </Text>
-                <Text style={styles.optionSub}>{opt.sublabel}</Text>
+                <Text style={[styles.optionSub, { color: colors.textDim }]}>{opt.sublabel}</Text>
               </View>
               <View style={[
                 styles.radio,
-                selected === i && styles.radioSelected,
+                { borderColor: selected === i ? "#F59E0B" : colors.borderStrong },
               ]}>
                 {selected === i && <View style={styles.radioDot} />}
               </View>
@@ -131,13 +142,13 @@ export default function ReminderScreen() {
           <TouchableOpacity
             style={[
               styles.setButton,
-              selected === null && styles.setButtonDisabled,
+              { backgroundColor: selected === null ? colors.cardAlt : "#F59E0B" },
             ]}
             onPress={scheduleReminder}
             disabled={selected === null || setting}
             activeOpacity={0.8}
           >
-            <Text style={styles.setButtonText}>
+            <Text style={[styles.setButtonText, { color: selected === null ? colors.textDim : "#000" }]}>
               {setting ? "Setting up..." : "Set Reminder"}
             </Text>
           </TouchableOpacity>
@@ -147,7 +158,7 @@ export default function ReminderScreen() {
             onPress={skipAndContinue}
             activeOpacity={0.8}
           >
-            <Text style={styles.skipButtonText}>Skip for now</Text>
+            <Text style={[styles.skipButtonText, { color: colors.textDim }]}>Skip for now</Text>
           </TouchableOpacity>
         </View>
       </View>

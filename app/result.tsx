@@ -36,6 +36,7 @@ import {
 } from "../services/levels";
 import AICoach from "../components/AICoach";
 import { recordActivity } from "../services/streak";
+import { useTheme } from "../services/theme";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -51,6 +52,7 @@ function getScoreLabel(score: number): string {
 
 export default function ResultScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { gameLevel: gameLevelParam } = useLocalSearchParams<{ gameLevel?: string }>();
   const gameLevelNum = gameLevelParam ? parseInt(gameLevelParam, 10) : null;
 
@@ -162,11 +164,11 @@ export default function ResultScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#E5E5E5" />
-          <Text style={styles.loadingText}>Analyzing your pronunciation…</Text>
-          <Text style={styles.loadingSub}>This may take a few seconds</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Analyzing your pronunciation…</Text>
+          <Text style={[styles.loadingSub, { color: colors.textDim }]}>This may take a few seconds</Text>
         </View>
       </SafeAreaView>
     );
@@ -174,18 +176,18 @@ export default function ResultScreen() {
 
   if (!result) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>Something went wrong</Text>
-          <Text style={styles.loadingSub}>
+          <Text style={[styles.loadingSub, { color: colors.textDim }]}>
             Could not reach the assessment service
           </Text>
           <TouchableOpacity
-            style={styles.retryButton}
+            style={[styles.retryButton, { backgroundColor: colors.cardAlt, borderColor: colors.borderStrong }]}
             onPress={() => router.replace("/test")}
             activeOpacity={0.8}
           >
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={[styles.retryButtonText, { color: colors.textSecondary }]}>Try Again</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -197,7 +199,7 @@ export default function ResultScreen() {
   const currentLevel = levelChange?.newLevel || "beginner_1";
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       {result && (
         <AICoach result={result} level={currentLevel} />
       )}

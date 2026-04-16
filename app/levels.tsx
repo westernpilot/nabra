@@ -15,6 +15,7 @@ import {
   getTierForLevel,
   type GameLevel,
 } from "../services/levels";
+import { useTheme } from "../services/theme";
 
 const TIERS = [
   { key: "beginner", levels: [1, 2, 3, 4, 5] },
@@ -39,6 +40,7 @@ function StarDisplay({ stars, size = 14 }: { stars: number; size?: number }) {
 
 export default function LevelsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [progress, setProgress] = useState<{
     currentLevel: number;
     levels: { [level: number]: { stars: number; score: number } };
@@ -50,9 +52,9 @@ export default function LevelsScreen() {
 
   if (!progress) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#E5E5E5" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -74,12 +76,15 @@ export default function LevelsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>←</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={[styles.backBtn, { backgroundColor: colors.card }]}
+        >
+          <Text style={[styles.backText, { color: colors.textSecondary }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Levels</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Levels</Text>
         <View style={styles.starTotal}>
           <Text style={styles.starTotalIcon}>★</Text>
           <Text style={styles.starTotalText}>{totalStars}/90</Text>
@@ -121,7 +126,14 @@ export default function LevelsScreen() {
                       key={levelNum}
                       style={[
                         styles.levelCard,
-                        unlocked && styles.levelCardUnlocked,
+                        {
+                          backgroundColor: unlocked
+                            ? colors.card
+                            : colors.bgElevated,
+                          borderColor: unlocked
+                            ? colors.borderStrong
+                            : colors.border,
+                        },
                         isCurrent && { borderColor: tierColor, borderWidth: 2 },
                       ]}
                       onPress={() => handleLevelPress(levelNum)}
@@ -136,6 +148,7 @@ export default function LevelsScreen() {
                           <Text
                             style={[
                               styles.levelNumber,
+                              { color: colors.textSecondary },
                               isCurrent && { color: tierColor },
                             ]}
                           >
@@ -145,7 +158,7 @@ export default function LevelsScreen() {
                             <StarDisplay stars={stars} />
                           )}
                           {score > 0 && (
-                            <Text style={styles.levelScore}>{score}</Text>
+                            <Text style={[styles.levelScore, { color: colors.textDim }]}>{score}</Text>
                           )}
                           {score === 0 && isCurrent && (
                             <View style={[styles.playBadge, { backgroundColor: tierColor }]}>

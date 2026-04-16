@@ -19,8 +19,10 @@ import {
   LEVEL_INFO,
   type DifficultyLevel,
 } from "../services/levels";
+import { useTheme } from "../services/theme";
 export default function TestScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [level, setLevel] = useState<DifficultyLevel | null>(null);
   const [sentences, setSentences] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -60,9 +62,9 @@ export default function TestScreen() {
 
   if (!level || sentences.length === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#E5E5E5" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -71,15 +73,15 @@ export default function TestScreen() {
   const info = LEVEL_INFO[level];
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.card }]}
           >
-            <Text style={styles.backText}>✕</Text>
+            <Text style={[styles.backText, { color: colors.textMuted }]}>✕</Text>
           </TouchableOpacity>
           <View style={styles.progressContainer}>
             {sentences.map((_, i) => (
@@ -87,31 +89,32 @@ export default function TestScreen() {
                 key={i}
                 style={[
                   styles.progressDot,
+                  { backgroundColor: colors.borderStrong },
                   i < currentIndex && styles.progressDotDone,
-                  i === currentIndex && styles.progressDotActive,
+                  i === currentIndex && [styles.progressDotActive, { backgroundColor: colors.primary }],
                 ]}
               />
             ))}
           </View>
-          <Text style={styles.counter}>
+          <Text style={[styles.counter, { color: colors.textDim }]}>
             {currentIndex + 1}/{sentences.length}
           </Text>
         </View>
 
         {/* Level badge */}
         <View style={styles.levelRow}>
-          <View style={[styles.levelBadge, { borderColor: info.color }]}>
+          <View style={[styles.levelBadge, { borderColor: info.color, backgroundColor: colors.card }]}>
             <Text style={[styles.levelText, { color: info.color }]}>
               {info.label}
             </Text>
-            <Text style={styles.levelAr}>{info.labelAr}</Text>
+            <Text style={[styles.levelAr, { color: colors.textDim }]}>{info.labelAr}</Text>
           </View>
         </View>
 
         {/* Sentence Display */}
-        <View style={styles.sentenceCard}>
-          <Text style={styles.instruction}>Read aloud:</Text>
-          <Text style={styles.sentence}>{sentences[currentIndex]}</Text>
+        <View style={[styles.sentenceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.instruction, { color: colors.textDim }]}>Read aloud:</Text>
+          <Text style={[styles.sentence, { color: colors.text }]}>{sentences[currentIndex]}</Text>
         </View>
 
         {/* Record Button */}
@@ -124,13 +127,16 @@ export default function TestScreen() {
         <TouchableOpacity
           style={[
             styles.nextButton,
-            !hasRecorded && styles.nextButtonDisabled,
+            {
+              backgroundColor: hasRecorded ? colors.cardAlt : colors.card,
+              borderColor: hasRecorded ? colors.borderStrong : colors.border,
+            },
           ]}
           onPress={handleNext}
           disabled={!hasRecorded}
           activeOpacity={0.8}
         >
-          <Text style={styles.nextButtonText}>
+          <Text style={[styles.nextButtonText, { color: hasRecorded ? colors.textSecondary : colors.textDim }]}>
             {isLastSentence ? "See Results" : "Next Sentence"}
           </Text>
         </TouchableOpacity>

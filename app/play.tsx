@@ -20,9 +20,11 @@ import {
   getTierForLevel,
 } from "../services/levels";
 import { recordActivity } from "../services/streak";
+import { useTheme } from "../services/theme";
 
 export default function PlayScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { level: levelParam } = useLocalSearchParams<{ level: string }>();
   const levelNum = parseInt(levelParam || "1", 10);
 
@@ -64,15 +66,15 @@ export default function PlayScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.card }]}
           >
-            <Text style={styles.backText}>✕</Text>
+            <Text style={[styles.backText, { color: colors.textMuted }]}>✕</Text>
           </TouchableOpacity>
           <View style={styles.progressContainer}>
             {sentences.map((_, i) => (
@@ -80,6 +82,7 @@ export default function PlayScreen() {
                 key={i}
                 style={[
                   styles.progressDot,
+                  { backgroundColor: colors.borderStrong },
                   i < currentIndex && styles.progressDotDone,
                   i === currentIndex && [
                     styles.progressDotActive,
@@ -89,25 +92,28 @@ export default function PlayScreen() {
               />
             ))}
           </View>
-          <Text style={styles.counter}>
+          <Text style={[styles.counter, { color: colors.textDim }]}>
             {currentIndex + 1}/{sentences.length}
           </Text>
         </View>
 
         {/* Level badge */}
         <View style={styles.levelRow}>
-          <View style={[styles.levelBadge, { borderColor: tierInfo.tierColor }]}>
+          <View style={[
+            styles.levelBadge,
+            { borderColor: tierInfo.tierColor, backgroundColor: colors.card },
+          ]}>
             <Text style={[styles.levelLabel, { color: tierInfo.tierColor }]}>
               Level {levelNum}
             </Text>
-            <Text style={styles.tierName}>{tierInfo.tierLabel}</Text>
+            <Text style={[styles.tierName, { color: colors.textDim }]}>{tierInfo.tierLabel}</Text>
           </View>
         </View>
 
         {/* Sentence Display */}
-        <View style={styles.sentenceCard}>
-          <Text style={styles.instruction}>Read aloud:</Text>
-          <Text style={styles.sentence}>{sentences[currentIndex]}</Text>
+        <View style={[styles.sentenceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.instruction, { color: colors.textDim }]}>Read aloud:</Text>
+          <Text style={[styles.sentence, { color: colors.text }]}>{sentences[currentIndex]}</Text>
         </View>
 
         {/* Record Button */}
@@ -120,8 +126,10 @@ export default function PlayScreen() {
         <TouchableOpacity
           style={[
             styles.nextButton,
-            { backgroundColor: hasRecorded ? tierInfo.tierColor + "30" : "#1A1A1A" },
-            hasRecorded && { borderColor: tierInfo.tierColor },
+            {
+              backgroundColor: hasRecorded ? tierInfo.tierColor + "30" : colors.cardAlt,
+              borderColor: hasRecorded ? tierInfo.tierColor : colors.border,
+            },
           ]}
           onPress={handleNext}
           disabled={!hasRecorded}
@@ -130,7 +138,7 @@ export default function PlayScreen() {
           <Text
             style={[
               styles.nextButtonText,
-              hasRecorded && { color: tierInfo.tierColor },
+              { color: hasRecorded ? tierInfo.tierColor : colors.textDim },
             ]}
           >
             {isLastSentence ? "See Results" : "Next Sentence"}

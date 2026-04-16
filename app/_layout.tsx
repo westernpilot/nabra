@@ -3,48 +3,75 @@ import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { initAuth, onAuthChange, type AuthState } from "../services/auth";
+import { initTheme, useTheme } from "../services/theme";
+import { isOnboardingComplete } from "../services/onboarding";
+import { loadSelectedLanguage } from "../services/languages";
 
 export default function RootLayout() {
   const [authState, setAuthState] = useState<AuthState>({ status: "loading" });
   const [ready, setReady] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
   const router = useRouter();
   const segments = useSegments();
+  const { mode, colors } = useTheme();
 
   useEffect(() => {
-    initAuth().then(() => setReady(true));
+    Promise.all([
+      initAuth(),
+      initTheme(),
+      loadSelectedLanguage(),
+      isOnboardingComplete().then((v) => setOnboardingDone(v)),
+    ]).then(() => setReady(true));
     const unsub = onAuthChange(setAuthState);
     return unsub;
   }, []);
 
   useEffect(() => {
     if (!ready) return;
+    isOnboardingComplete().then((v) => setOnboardingDone(v));
+  }, [segments, ready]);
 
-    const onAuthScreen = segments[0] === "auth";
-    const needsAuth = authState.status === "loading";
+  useEffect(() => {
+    if (!ready || onboardingDone === null) return;
 
-    if (needsAuth && !onAuthScreen) {
+    const route = segments[0];
+    const onAuthScreen = route === "auth";
+    const onOnboarding = route === "language" || route === "reminder";
+    const isAuthed = authState.status !== "loading";
+
+    if (!isAuthed && !onAuthScreen) {
       router.replace("/auth");
-    } else if (!needsAuth && onAuthScreen) {
-      router.replace("/");
+      return;
     }
-  }, [ready, authState, segments]);
+    if (isAuthed && onAuthScreen) {
+      if (!onboardingDone) {
+        router.replace("/language");
+      } else {
+        router.replace("/");
+      }
+      return;
+    }
+    if (isAuthed && !onboardingDone && !onOnboarding && !onAuthScreen) {
+      router.replace("/language");
+    }
+  }, [ready, authState, segments, onboardingDone]);
 
   if (!ready) {
     return (
-      <View style={styles.loader}>
-        <StatusBar style="light" />
-        <ActivityIndicator size="large" color="#E5E5E5" />
+      <View style={[styles.loader, { backgroundColor: colors.bg }]}>
+        <StatusBar style={mode === "dark" ? "light" : "dark"} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#000000" },
+          contentStyle: { backgroundColor: colors.bg },
           animation: "slide_from_right",
         }}
       />
@@ -55,7 +82,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   loader: {
     flex: 1,
-    backgroundColor: "#000000",
     justifyContent: "center",
     alignItems: "center",
   },

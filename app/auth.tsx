@@ -17,6 +17,7 @@ import {
   continueAsGuest,
 } from "../services/auth";
 import { mergeCloudToLocal } from "../services/cloudSync";
+import { useTheme, getLogo } from "../services/theme";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -26,6 +27,7 @@ const GOOGLE_ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.
 
 export default function AuthScreen() {
   const router = useRouter();
+  const { colors, mode } = useTheme();
   const [loading, setLoading] = useState(false);
 
   const [, googleResponse, googlePromptAsync] = Google.useIdTokenAuthRequest({
@@ -57,59 +59,62 @@ export default function AuthScreen() {
     router.replace("/");
   }
 
+  const googleBg = mode === "dark" ? "#FFFFFF" : "#1F2937";
+  const googleFg = mode === "dark" ? "#1A1A1A" : "#FFFFFF";
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         <View style={styles.hero}>
           <Image
-            source={require("../assets/logo-white.png")}
+            source={getLogo(mode)}
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.title}>Welcome to Nabra</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Welcome to Nabra</Text>
+          <Text style={[styles.subtitle, { color: colors.textDim }]}>
             Master your Arabic pronunciation with AI-powered feedback
           </Text>
         </View>
 
         <View style={styles.authSection}>
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[styles.googleButton, { backgroundColor: googleBg }]}
             onPress={handleGoogleSignIn}
             activeOpacity={0.8}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#000" size="small" />
+              <ActivityIndicator color={googleFg} size="small" />
             ) : (
               <>
                 <Text style={styles.googleIcon}>G</Text>
-                <Text style={styles.googleButtonText}>
+                <Text style={[styles.googleButtonText, { color: googleFg }]}>
                   Continue with Google
                 </Text>
               </>
             )}
           </TouchableOpacity>
 
-          <View style={styles.benefitsCard}>
-            <Text style={styles.benefitsTitle}>
+          <View style={[styles.benefitsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.benefitsTitle, { color: colors.textMuted }]}>
               Why create an account?
             </Text>
             <View style={styles.benefitRow}>
               <Text style={styles.benefitIcon}>☁️</Text>
-              <Text style={styles.benefitText}>
+              <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                 Sync progress across devices
               </Text>
             </View>
             <View style={styles.benefitRow}>
               <Text style={styles.benefitIcon}>📊</Text>
-              <Text style={styles.benefitText}>
+              <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                 Never lose your learning history
               </Text>
             </View>
             <View style={styles.benefitRow}>
               <Text style={styles.benefitIcon}>🔄</Text>
-              <Text style={styles.benefitText}>
+              <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                 Pick up where you left off anywhere
               </Text>
             </View>
@@ -118,21 +123,21 @@ export default function AuthScreen() {
 
         <View style={styles.bottomSection}>
           <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.textDim }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 
           <TouchableOpacity
-            style={styles.guestButton}
+            style={[styles.guestButton, { borderColor: colors.borderStrong }]}
             onPress={handleGuest}
             activeOpacity={0.8}
           >
-            <Text style={styles.guestButtonText}>
+            <Text style={[styles.guestButtonText, { color: colors.textDim }]}>
               Continue as Guest
             </Text>
           </TouchableOpacity>
-          <Text style={styles.guestNote}>
+          <Text style={[styles.guestNote, { color: colors.textDim }]}>
             Your progress will only be saved on this device
           </Text>
         </View>

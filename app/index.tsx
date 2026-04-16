@@ -10,11 +10,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuthState, signOut, type AuthState } from "../services/auth";
-import { pushLocalToCloud } from "../services/cloudSync";
 import { getStreak } from "../services/streak";
+import { useTheme, getLogo } from "../services/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { colors, mode, toggle } = useTheme();
   const [auth, setAuth] = useState<AuthState>(getAuthState());
   const [streak, setStreak] = useState({ currentStreak: 0, longestStreak: 0, totalDays: 0 });
 
@@ -44,103 +45,121 @@ export default function HomeScreen() {
     router.replace("/auth");
   }
 
+  const greenBorder = mode === "dark" ? "#22C55E40" : "#16A34A60";
+  const greenIconBg = mode === "dark" ? "#0D2818" : "#DCFCE7";
+  const greenIcon = mode === "dark" ? "#22C55E" : "#16A34A";
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         {/* Account bar */}
         <View style={styles.accountBar}>
           {user ? (
             <TouchableOpacity onPress={handleSignOut} activeOpacity={0.7}>
               <View style={styles.accountRow}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
+                <View style={[styles.avatar, { backgroundColor: colors.borderStrong }]}>
+                  <Text style={[styles.avatarText, { color: colors.textSecondary }]}>
                     {(user.displayName || user.email || "U")[0].toUpperCase()}
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.accountName} numberOfLines={1}>
+                  <Text style={[styles.accountName, { color: colors.textSecondary }]} numberOfLines={1}>
                     {user.displayName || "User"}
                   </Text>
-                  <Text style={styles.accountEmail} numberOfLines={1}>
+                  <Text style={[styles.accountEmail, { color: colors.textDim }]} numberOfLines={1}>
                     {user.email}
                   </Text>
                 </View>
-                <Text style={styles.signOutText}>Sign Out</Text>
+                <Text style={[styles.signOutText, { color: colors.danger }]}>Sign Out</Text>
               </View>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={handleSignIn} activeOpacity={0.7}>
               <View style={styles.accountRow}>
-                <View style={[styles.avatar, { backgroundColor: "#1F1F1F" }]}>
-                  <Text style={[styles.avatarText, { color: "#6B7280" }]}>G</Text>
+                <View style={[styles.avatar, { backgroundColor: colors.border }]}>
+                  <Text style={[styles.avatarText, { color: colors.textDim }]}>G</Text>
                 </View>
-                <Text style={styles.guestLabel}>Guest Mode</Text>
+                <Text style={[styles.guestLabel, { color: colors.textDim }]}>Guest Mode</Text>
                 <Text style={styles.signInText}>Sign In</Text>
               </View>
             </TouchableOpacity>
           )}
         </View>
 
+        {/* Theme toggle */}
+        <TouchableOpacity
+          style={[styles.themeToggle, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={toggle}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.themeToggleIcon}>{mode === "dark" ? "☀️" : "🌙"}</Text>
+        </TouchableOpacity>
+
         <View style={styles.hero}>
           <Image
-            source={require("../assets/logo-white.png")}
+            source={getLogo(mode)}
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.tagline}>
+          <Text style={[styles.tagline, { color: colors.textDim }]}>
             Master your Arabic pronunciation
           </Text>
         </View>
 
         {/* Streak */}
         <View style={styles.streakRow}>
-          <View style={styles.streakCard}>
+          <View style={[styles.streakCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={styles.streakFire}>{streak.currentStreak > 0 ? "🔥" : "❄️"}</Text>
-            <Text style={styles.streakCount}>{streak.currentStreak}</Text>
-            <Text style={styles.streakLabel}>Day Streak</Text>
+            <Text style={[styles.streakCount, { color: colors.text }]}>{streak.currentStreak}</Text>
+            <Text style={[styles.streakLabel, { color: colors.textDim }]}>Day Streak</Text>
           </View>
-          <View style={styles.streakCard}>
+          <View style={[styles.streakCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={styles.streakFire}>🏆</Text>
-            <Text style={styles.streakCount}>{streak.longestStreak}</Text>
-            <Text style={styles.streakLabel}>Best</Text>
+            <Text style={[styles.streakCount, { color: colors.text }]}>{streak.longestStreak}</Text>
+            <Text style={[styles.streakLabel, { color: colors.textDim }]}>Best</Text>
           </View>
-          <View style={styles.streakCard}>
+          <View style={[styles.streakCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={styles.streakFire}>📅</Text>
-            <Text style={styles.streakCount}>{streak.totalDays}</Text>
-            <Text style={styles.streakLabel}>Total Days</Text>
+            <Text style={[styles.streakCount, { color: colors.text }]}>{streak.totalDays}</Text>
+            <Text style={[styles.streakLabel, { color: colors.textDim }]}>Total Days</Text>
           </View>
         </View>
 
         {/* Play Levels */}
         <TouchableOpacity
-          style={styles.playButton}
+          style={[
+            styles.playButton,
+            { backgroundColor: colors.card, borderColor: greenBorder },
+          ]}
           onPress={() => router.push("/levels")}
           activeOpacity={0.8}
         >
           <View style={styles.playButtonInner}>
-            <Text style={styles.playIcon}>▶</Text>
+            <Text style={[styles.playIcon, { color: greenIcon, backgroundColor: greenIconBg }]}>▶</Text>
             <View>
-              <Text style={styles.playButtonTitle}>Play Levels</Text>
-              <Text style={styles.playButtonSub}>30 levels · 5 sentences each · Earn stars</Text>
+              <Text style={[styles.playButtonTitle, { color: colors.text }]}>Play Levels</Text>
+              <Text style={[styles.playButtonSub, { color: colors.textDim }]}>
+                30 levels · 5 sentences each · Earn stars
+              </Text>
             </View>
           </View>
         </TouchableOpacity>
 
         {/* Quick Test */}
         <TouchableOpacity
-          style={styles.startButton}
-          onPress={() => router.push("/language")}
+          style={[styles.startButton, { backgroundColor: colors.cardAlt, borderColor: colors.borderStrong }]}
+          onPress={() => router.push("/test")}
           activeOpacity={0.8}
         >
-          <Text style={styles.startButtonText}>Quick Test</Text>
+          <Text style={[styles.startButtonText, { color: colors.textSecondary }]}>Quick Test</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.historyButton}
+          style={[styles.historyButton, { borderColor: colors.border }]}
           onPress={() => router.push("/history")}
           activeOpacity={0.8}
         >
-          <Text style={styles.historyButtonText}>View Progress</Text>
+          <Text style={[styles.historyButtonText, { color: colors.textDim }]}>View Progress</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -148,13 +167,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000000" },
+  safe: { flex: 1 },
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
   accountBar: {
     position: "absolute",
     top: 12,
     left: 24,
-    right: 24,
+    right: 72,
     zIndex: 10,
   },
   accountRow: {
@@ -167,16 +186,28 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#2A2A2A",
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: { color: "#E5E5E5", fontSize: 14, fontWeight: "700" },
-  accountName: { color: "#E5E5E5", fontSize: 13, fontWeight: "600" },
-  accountEmail: { color: "#4B5563", fontSize: 11 },
-  guestLabel: { color: "#6B7280", fontSize: 14, fontWeight: "500", flex: 1 },
-  signOutText: { color: "#EF4444", fontSize: 13, fontWeight: "600" },
+  avatarText: { fontSize: 14, fontWeight: "700" },
+  accountName: { fontSize: 13, fontWeight: "600" },
+  accountEmail: { fontSize: 11 },
+  guestLabel: { fontSize: 14, fontWeight: "500", flex: 1 },
+  signOutText: { fontSize: 13, fontWeight: "600" },
   signInText: { color: "#60A5FA", fontSize: 13, fontWeight: "600" },
+  themeToggle: {
+    position: "absolute",
+    top: 16,
+    right: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    zIndex: 10,
+  },
+  themeToggleIcon: { fontSize: 18 },
   hero: { alignItems: "center", marginBottom: 24 },
   streakRow: {
     flexDirection: "row",
@@ -185,31 +216,26 @@ const styles = StyleSheet.create({
   },
   streakCard: {
     flex: 1,
-    backgroundColor: "#141414",
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#1F1F1F",
   },
   streakFire: { fontSize: 20, marginBottom: 4 },
-  streakCount: { fontSize: 22, fontWeight: "800", color: "#FFFFFF" },
-  streakLabel: { fontSize: 11, color: "#6B7280", fontWeight: "600", marginTop: 2 },
+  streakCount: { fontSize: 22, fontWeight: "800" },
+  streakLabel: { fontSize: 11, fontWeight: "600", marginTop: 2 },
   logo: { width: 220, height: 160, marginBottom: 12 },
   tagline: {
     fontSize: 16,
-    color: "#6B7280",
     marginTop: 4,
     textAlign: "center",
     letterSpacing: 0.3,
   },
   playButton: {
-    backgroundColor: "#141414",
     borderRadius: 20,
     padding: 22,
     marginBottom: 12,
     borderWidth: 1.5,
-    borderColor: "#22C55E40",
   },
   playButtonInner: {
     flexDirection: "row",
@@ -218,36 +244,29 @@ const styles = StyleSheet.create({
   },
   playIcon: {
     fontSize: 24,
-    color: "#22C55E",
     width: 50,
     height: 50,
     lineHeight: 50,
     textAlign: "center",
-    backgroundColor: "#0D2818",
     borderRadius: 25,
     overflow: "hidden",
   },
   playButtonTitle: {
     fontSize: 19,
     fontWeight: "800",
-    color: "#FFFFFF",
     marginBottom: 3,
   },
   playButtonSub: {
     fontSize: 13,
-    color: "#6B7280",
     fontWeight: "500",
   },
   startButton: {
-    backgroundColor: "#2A2A2A",
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#3A3A3A",
   },
   startButtonText: {
-    color: "#E5E5E5",
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,
@@ -258,7 +277,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
     borderWidth: 1,
-    borderColor: "#1F1F1F",
   },
-  historyButtonText: { color: "#6B7280", fontSize: 16, fontWeight: "600" },
+  historyButtonText: { fontSize: 16, fontWeight: "600" },
 });

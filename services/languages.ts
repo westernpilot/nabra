@@ -32,12 +32,29 @@ export const LANGUAGES: Language[] = [
   { code: "th", name: "Thai", nativeName: "ไทย", flag: "🇹🇭" },
 ];
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const LANGUAGE_KEY = "nabra_selected_language";
+
 let _selectedLanguage: Language | null = null;
 
 export function setSelectedLanguage(lang: Language) {
   _selectedLanguage = lang;
+  AsyncStorage.setItem(LANGUAGE_KEY, JSON.stringify(lang)).catch(() => {});
 }
 
 export function getSelectedLanguage(): Language | null {
   return _selectedLanguage;
+}
+
+export async function loadSelectedLanguage(): Promise<Language | null> {
+  try {
+    const raw = await AsyncStorage.getItem(LANGUAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Language;
+      _selectedLanguage = parsed;
+      return parsed;
+    }
+  } catch {}
+  return null;
 }
