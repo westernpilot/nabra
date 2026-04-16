@@ -11,9 +11,11 @@ import RecordButton from "../components/RecordButton";
 import { assessSingleWord } from "../services/assessment";
 import { getWordsForLetter } from "../services/drillWords";
 import { ARABIC_PRONUNCIATION_GUIDE, ZONE_INFO } from "../services/arabicGuide";
+import { useTheme } from "../services/theme";
 
 export default function DrillScreen() {
   const router = useRouter();
+  const { colors, mode } = useTheme();
   const { letter } = useLocalSearchParams<{ letter: string }>();
 
   const words = getWordsForLetter(letter || "");
@@ -68,21 +70,30 @@ export default function DrillScreen() {
     : null;
 
   const getColor = (s: number) => {
-    if (s >= 80) return "#22C55E";
+    if (s >= 80) return colors.success;
     if (s >= 60) return "#F59E0B";
-    return "#EF4444";
+    return colors.danger;
   };
 
   if (!letter || words.length === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No drill words available</Text>
+          <Text style={styles.emptyIcon}>📝</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
+            No drill words for this letter yet
+          </Text>
+          <Text style={[styles.emptyText, { color: colors.textDim }]}>
+            We haven't added drills for{letter ? ` "${letter}"` : " that letter"} yet. Try another weak letter from the Coach or Progress tab.
+          </Text>
           <TouchableOpacity
-            style={styles.backBtn}
+            style={[styles.backBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.back()}
+            activeOpacity={0.85}
           >
-            <Text style={styles.backBtnText}>Go Back</Text>
+            <Text style={[styles.backBtnText, { color: colors.primaryText }]}>
+              Go Back
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -90,25 +101,30 @@ export default function DrillScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.closeBtn}
+            style={[styles.closeBtn, { backgroundColor: colors.card }]}
           >
-            <Text style={styles.closeText}>✕</Text>
+            <Text style={[styles.closeText, { color: colors.textMuted }]}>✕</Text>
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={[styles.headerLetter, zone && { color: zone.color }]}>
+            <Text
+              style={[
+                styles.headerLetter,
+                { color: zone?.color || colors.text },
+              ]}
+            >
               {letter}
             </Text>
-            <Text style={styles.headerName}>
+            <Text style={[styles.headerName, { color: colors.textDim }]}>
               {guide?.name} Practice
             </Text>
           </View>
-          <Text style={styles.counter}>
+          <Text style={[styles.counter, { color: colors.textDim }]}>
             {currentIndex + 1}/{words.length}
           </Text>
         </View>
@@ -120,25 +136,38 @@ export default function DrillScreen() {
               key={i}
               style={[
                 styles.dot,
+                { backgroundColor: colors.borderStrong },
                 results[i] !== null && {
                   backgroundColor: getColor(results[i]!),
                 },
-                i === currentIndex && results[i] === null && styles.dotActive,
+                i === currentIndex && results[i] === null && {
+                  backgroundColor: colors.primary,
+                  width: 48,
+                },
               ]}
             />
           ))}
         </View>
 
         {/* Word card */}
-        <View style={styles.wordCard}>
-          <Text style={styles.wordLabel}>Say this word:</Text>
-          <Text style={styles.word}>{currentWord}</Text>
+        <View style={[styles.wordCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.wordLabel, { color: colors.textDim }]}>
+            Say this word:
+          </Text>
+          <Text style={[styles.word, { color: colors.text }]}>{currentWord}</Text>
+          {guide?.tip && (
+            <Text style={[styles.tip, { color: colors.textDim }]}>
+              💡 {guide.tip}
+            </Text>
+          )}
         </View>
 
         {/* Score feedback */}
         {assessing && (
           <View style={styles.scoreRow}>
-            <Text style={styles.assessingText}>Analyzing...</Text>
+            <Text style={[styles.assessingText, { color: colors.textDim }]}>
+              Analyzing...
+            </Text>
           </View>
         )}
         {score !== null && !assessing && (
@@ -163,7 +192,7 @@ export default function DrillScreen() {
         {/* Next / Done */}
         {score !== null && !assessing && (
           <TouchableOpacity
-            style={styles.nextBtn}
+            style={[styles.nextBtn, { backgroundColor: colors.cardAlt, borderColor: colors.borderStrong }]}
             onPress={
               currentIndex < words.length - 1
                 ? handleNext
@@ -171,7 +200,7 @@ export default function DrillScreen() {
             }
             activeOpacity={0.8}
           >
-            <Text style={styles.nextBtnText}>
+            <Text style={[styles.nextBtnText, { color: colors.text }]}>
               {currentIndex < words.length - 1 ? "Next Word" : "Done"}
             </Text>
           </TouchableOpacity>
@@ -179,8 +208,10 @@ export default function DrillScreen() {
 
         {/* Summary when complete */}
         {isComplete && avgScore !== null && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Drill Complete!</Text>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.summaryTitle, { color: colors.text }]}>
+              Drill Complete!
+            </Text>
             <Text style={[styles.summaryScore, { color: getColor(avgScore) }]}>
               Average: {avgScore}/100
             </Text>
@@ -192,19 +223,18 @@ export default function DrillScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000000" },
+  safe: { flex: 1 },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  emptyText: { color: "#6B7280", fontSize: 16, marginBottom: 20 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 44, marginBottom: 16 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", marginBottom: 8, textAlign: "center" },
+  emptyText: { fontSize: 14, textAlign: "center", lineHeight: 20, marginBottom: 24 },
   backBtn: {
-    backgroundColor: "#2A2A2A",
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#3A3A3A",
   },
-  backBtnText: { color: "#E5E5E5", fontSize: 16, fontWeight: "700" },
+  backBtnText: { fontSize: 16, fontWeight: "700" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -215,15 +245,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#1F1F1F",
     alignItems: "center",
     justifyContent: "center",
   },
-  closeText: { fontSize: 18, color: "#9CA3AF", fontWeight: "600" },
+  closeText: { fontSize: 18, fontWeight: "600" },
   headerCenter: { alignItems: "center" },
-  headerLetter: { fontSize: 36, fontWeight: "800", color: "#E5E5E5" },
-  headerName: { fontSize: 14, color: "#6B7280", fontWeight: "600", marginTop: 2 },
-  counter: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
+  headerLetter: { fontSize: 36, fontWeight: "800" },
+  headerName: { fontSize: 14, fontWeight: "600", marginTop: 2 },
+  counter: { fontSize: 14, fontWeight: "600" },
   progressRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -234,38 +263,39 @@ const styles = StyleSheet.create({
     width: 32,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#2A2A2A",
   },
-  dotActive: { backgroundColor: "#E5E5E5", width: 48 },
   wordCard: {
-    backgroundColor: "#141414",
     borderRadius: 24,
-    padding: 32,
+    padding: 28,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#1F1F1F",
   },
   wordLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    color: "#6B7280",
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   word: {
     fontSize: 44,
     fontWeight: "700",
-    color: "#FFFFFF",
     textAlign: "center",
     writingDirection: "rtl",
+  },
+  tip: {
+    fontSize: 12,
+    marginTop: 14,
+    textAlign: "center",
+    lineHeight: 17,
+    paddingHorizontal: 8,
   },
   scoreRow: {
     alignItems: "center",
     marginTop: 16,
     gap: 8,
   },
-  assessingText: { color: "#6B7280", fontSize: 14, fontWeight: "500" },
+  assessingText: { fontSize: 14, fontWeight: "500" },
   scoreBadge: {
     paddingHorizontal: 20,
     paddingVertical: 8,
@@ -274,24 +304,20 @@ const styles = StyleSheet.create({
   scoreBadgeText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
   scoreLabel: { fontSize: 14, fontWeight: "600" },
   nextBtn: {
-    backgroundColor: "#2A2A2A",
-    paddingVertical: 18,
-    borderRadius: 16,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#3A3A3A",
     marginTop: 12,
   },
-  nextBtnText: { color: "#E5E5E5", fontSize: 17, fontWeight: "700" },
+  nextBtnText: { fontSize: 16, fontWeight: "700" },
   summaryCard: {
-    backgroundColor: "#141414",
     borderRadius: 16,
     padding: 20,
     alignItems: "center",
     marginTop: 16,
     borderWidth: 1,
-    borderColor: "#1F1F1F",
   },
-  summaryTitle: { color: "#E5E5E5", fontSize: 18, fontWeight: "700", marginBottom: 8 },
+  summaryTitle: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
   summaryScore: { fontSize: 24, fontWeight: "800" },
 });

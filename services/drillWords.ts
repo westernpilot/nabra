@@ -29,8 +29,34 @@ export const DRILL_WORDS: Record<string, string[]> = {
   "ه": ["هَدِيَّة", "شَهْر", "هُنَاك", "سَهْل", "فَاكِهَة"],
   "و": ["وَلَد", "وَرْد", "يَوْم", "نَوْم", "وَقْت"],
   "ي": ["يَوْم", "يَمِين", "عَرَبِي", "كُرْسِي", "طَبِيب"],
+  "ا": ["كِتَاب", "بَاب", "سَمَاء", "عَالَم", "صَبَاح"],
+  "إ": ["إِسْلَام", "إِنْسَان", "إِلَى", "إِسْم", "إِذْن"],
+  "ؤ": ["سُؤَال", "فُؤَاد", "رُؤْيَة", "مُؤْمِن", "لُؤْلُؤ"],
+  "ئ": ["سَيِّئ", "بِئْر", "خَاطِئ", "بَارِئ", "قَارِئ"],
+  "ى": ["مَعْنَى", "إِلَى", "عَلَى", "مُسْتَشْفَى", "ذِكْرَى"],
 };
 
+// Strip tashkeel/tatweel and normalize some common letter variants
+function normalizeLetter(raw: string): string {
+  if (!raw) return "";
+  const cleaned = raw.replace(/[\u064B-\u065F\u0670\u0640]/g, "").trim();
+  return cleaned[0] || "";
+}
+
 export function getWordsForLetter(letter: string): string[] {
-  return DRILL_WORDS[letter] || [];
+  const direct = DRILL_WORDS[letter];
+  if (direct && direct.length) return direct;
+
+  const normalized = normalizeLetter(letter);
+  if (normalized && DRILL_WORDS[normalized]) {
+    return DRILL_WORDS[normalized];
+  }
+
+  // Fallback: common hamza variants all collapse to a generic set
+  const hamzaForms = ["ء", "أ", "إ", "ؤ", "ئ"];
+  if (hamzaForms.includes(normalized)) {
+    return DRILL_WORDS["ء"] || [];
+  }
+
+  return [];
 }
