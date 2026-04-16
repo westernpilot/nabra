@@ -1,0 +1,1 @@
+export { AZURE_SPEECH_KEY, AZURE_SPEECH_REGION } from "./azureConfig";

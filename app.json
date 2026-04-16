@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.nabra.app",
-      "versionCode": 1,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
@@ -34,7 +34,8 @@
         "android.permission.INTERNET",
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -57,6 +58,13 @@
           "color": "#0A0A0A"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "51669f04-56b8-4fa9-8e02-5ede48407a4f"
+      }
+    },
+    "owner": "westerne"
   }
 }

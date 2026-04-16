@@ -33,11 +33,10 @@ yarn-error.*
 # local env files
 .env*.local
 
-# API keys
-services/config.ts
-services/firebase.ts
+# API keys / secrets (config wrappers are tracked, secret values are not)
 services/aiConfig.ts
-services/ai.ts
+services/azureConfig.ts
+services/firebaseConfig.ts
 
 # typescript
 *.tsbuildinfo
