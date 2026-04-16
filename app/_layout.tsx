@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { initAuth, onAuthChange, type AuthState } from "../services/auth";
 import { initTheme, useTheme } from "../services/theme";
 import { isOnboardingComplete } from "../services/onboarding";
 import { loadSelectedLanguage } from "../services/languages";
+import SplashAnimation from "../components/SplashAnimation";
 
 export default function RootLayout() {
   const [authState, setAuthState] = useState<AuthState>({ status: "loading" });
   const [ready, setReady] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
   const router = useRouter();
   const segments = useSegments();
@@ -56,33 +58,27 @@ export default function RootLayout() {
     }
   }, [ready, authState, segments, onboardingDone]);
 
-  if (!ready) {
-    return (
-      <View style={[styles.loader, { backgroundColor: colors.bg }]}>
-        <StatusBar style={mode === "dark" ? "light" : "dark"} />
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  const showSplash = !splashDone;
 
   return (
     <>
       <StatusBar style={mode === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.bg },
-          animation: "slide_from_right",
-        }}
-      />
+      <View style={[styles.root, { backgroundColor: colors.bg }]}>
+        {ready && (
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+              animation: "slide_from_right",
+            }}
+          />
+        )}
+        {showSplash && <SplashAnimation onFinish={() => setSplashDone(true)} />}
+      </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  root: { flex: 1 },
 });
