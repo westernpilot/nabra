@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     marginBottom: 8,
   },
-  scroll: { paddingHorizontal: 24, paddingTop: 48, paddingBottom: 40 },
+  scroll: { paddingHorizontal: 24, paddingTop: 48, paddingBottom: 120 },
   scoreCard: {
     backgroundColor: "#141414",
     borderRadius: 24,

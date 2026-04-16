@@ -1,8 +1,9 @@
-import { OPENAI_API_KEY } from "./aiConfig";
 import type { AssessmentResult, SentenceResult } from "./assessment";
 import type { ProblemLetter } from "./progress";
 import type { DifficultyLevel } from "./levels";
 
+// Replace with your OpenAI API key — get one at https://platform.openai.com/api-keys
+const OPENAI_API_KEY = "sk-YOUR_KEY_HERE";
 const API_URL = "https://api.openai.com/v1/chat/completions";
 
 async function chat(messages: { role: string; content: string }[]): Promise<string> {
@@ -108,12 +109,16 @@ export async function generateTargetedSentences(params: {
   };
 
   const systemPrompt = `You are an Arabic sentence generator for a pronunciation learning app. Generate Arabic sentences that:
+- Are written ONLY in Modern Standard Arabic (الفصحى / al-fusha) — absolutely NO dialects (no Egyptian عامية, no Levantine, no Gulf, no Moroccan, etc.)
+- Use formal Arabic grammar with correct إعراب (case endings)
 - Are fully vowelized with tashkeel (fatha, damma, kasra, shadda, sukun, tanween)
 - Are strictly NON-RELIGIOUS (no Quran, Hadith, Bible, or religious content)
 - Focus on the specified Arabic letters for practice
 - Match the specified difficulty level
 - Sound natural and are grammatically correct
 - Cover everyday topics: food, travel, nature, work, family, sports, weather, city life
+
+CRITICAL: Every sentence MUST be in فصحى (Modern Standard Arabic). Do NOT use any colloquial or dialect words like عايز، ده، كده، بتاع، دلوقتي، etc. Use their فصحى equivalents: أريد، هذا، هكذا، خاصّ، الآن.
 
 Return ONLY the Arabic sentences, one per line, no numbering, no translations.`;
 

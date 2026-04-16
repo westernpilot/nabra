@@ -37,6 +37,7 @@ yarn-error.*
 services/config.ts
 services/firebase.ts
 services/aiConfig.ts
+services/ai.ts
 
 # typescript
 *.tsbuildinfo
