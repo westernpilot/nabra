@@ -33,6 +33,7 @@ import {
   type DifficultyLevel,
 } from "../services/levels";
 import AICoach from "../components/AICoach";
+import { recordActivity } from "../services/streak";
 
 function getScoreColor(score: number): string {
   if (score >= 80) return "#22C55E";
@@ -68,6 +69,7 @@ export default function ResultScreen() {
         const r = await runAssessment();
         setResult(r);
         await saveSession(r);
+        await recordActivity();
 
         const { newLevel, direction } = calculateNewLevel(oldLevel, r.score);
         setLevelChange({ oldLevel, newLevel, direction });

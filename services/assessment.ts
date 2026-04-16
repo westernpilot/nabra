@@ -167,11 +167,13 @@ async function assessSentence(
       (tip, i, arr) => arr.findIndex((t) => t.letter === tip.letter) === i
     );
 
+    const rawScore = best?.PronScore ?? best?.PronunciationAssessment?.PronScore ?? 0;
+    const mistakePenalty = mistakes.length * 3;
+    const adjustedScore = Math.max(0, Math.round(rawScore * 0.85 - mistakePenalty));
+
     return {
       sentence: referenceText,
-      score: Math.round(
-        best?.PronScore ?? best?.PronunciationAssessment?.PronScore ?? 0
-      ),
+      score: adjustedScore,
       words: azureWords,
       mistakes,
       letterTips: uniqueTips,

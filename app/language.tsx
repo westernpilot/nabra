@@ -10,6 +10,7 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   LANGUAGES,
   setSelectedLanguage,
@@ -94,10 +95,15 @@ export default function LanguageScreen() {
       l.nativeName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selected) return;
     setSelectedLanguage(selected);
-    router.replace("/test");
+    const reminderSet = await AsyncStorage.getItem("nabra_reminder_set");
+    if (reminderSet) {
+      router.replace("/test");
+    } else {
+      router.replace("/reminder");
+    }
   };
 
   return (

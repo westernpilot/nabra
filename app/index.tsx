@@ -12,15 +12,18 @@ import { useRouter } from "expo-router";
 import { getUserLevel, LEVEL_INFO, type DifficultyLevel } from "../services/levels";
 import { getAuthState, signOut, type AuthState } from "../services/auth";
 import { pushLocalToCloud } from "../services/cloudSync";
+import { getStreak } from "../services/streak";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [level, setLevel] = useState<DifficultyLevel>("beginner_1");
   const [auth, setAuth] = useState<AuthState>(getAuthState());
+  const [streak, setStreak] = useState({ currentStreak: 0, longestStreak: 0, totalDays: 0 });
 
   useEffect(() => {
     getUserLevel().then(setLevel);
     setAuth(getAuthState());
+    getStreak().then(setStreak);
   }, []);
 
   const info = LEVEL_INFO[level];
@@ -91,6 +94,25 @@ export default function HomeScreen() {
           <Text style={styles.tagline}>
             Master your Arabic pronunciation
           </Text>
+        </View>
+
+        {/* Streak */}
+        <View style={styles.streakRow}>
+          <View style={styles.streakCard}>
+            <Text style={styles.streakFire}>{streak.currentStreak > 0 ? "🔥" : "❄️"}</Text>
+            <Text style={styles.streakCount}>{streak.currentStreak}</Text>
+            <Text style={styles.streakLabel}>Day Streak</Text>
+          </View>
+          <View style={styles.streakCard}>
+            <Text style={styles.streakFire}>🏆</Text>
+            <Text style={styles.streakCount}>{streak.longestStreak}</Text>
+            <Text style={styles.streakLabel}>Best</Text>
+          </View>
+          <View style={styles.streakCard}>
+            <Text style={styles.streakFire}>📅</Text>
+            <Text style={styles.streakCount}>{streak.totalDays}</Text>
+            <Text style={styles.streakLabel}>Total Days</Text>
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -170,7 +192,24 @@ const styles = StyleSheet.create({
   guestLabel: { color: "#6B7280", fontSize: 14, fontWeight: "500", flex: 1 },
   signOutText: { color: "#EF4444", fontSize: 13, fontWeight: "600" },
   signInText: { color: "#60A5FA", fontSize: 13, fontWeight: "600" },
-  hero: { alignItems: "center", marginBottom: 48 },
+  hero: { alignItems: "center", marginBottom: 24 },
+  streakRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 24,
+  },
+  streakCard: {
+    flex: 1,
+    backgroundColor: "#141414",
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#1F1F1F",
+  },
+  streakFire: { fontSize: 20, marginBottom: 4 },
+  streakCount: { fontSize: 22, fontWeight: "800", color: "#FFFFFF" },
+  streakLabel: { fontSize: 11, color: "#6B7280", fontWeight: "600", marginTop: 2 },
   logo: { width: 220, height: 160, marginBottom: 12 },
   tagline: {
     fontSize: 16,
