@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.nabra.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
@@ -57,7 +57,8 @@
           "icon": "./assets/icon.png",
           "color": "#0A0A0A"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "router": {},

@@ -1,4 +1,4 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Same as .gitignore BUT allows secret config files to be uploaded to EAS build servers
 
 # dependencies
 node_modules/
@@ -30,7 +30,7 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files (secrets)
+# local env files — never upload secrets to EAS (use Expo dashboard env vars instead)
 .env
 .env.local
 .env*.local
@@ -42,6 +42,6 @@ yarn-error.*
 /ios
 /android
 
-# EAS / Play Store secrets
+# EAS / Play Store secrets (not needed at build time)
 play-service-account.json
 google-services.json

@@ -6,6 +6,12 @@ import { OPENAI_API_KEY } from "./aiConfig";
 const API_URL = "https://api.openai.com/v1/chat/completions";
 
 async function chat(messages: { role: string; content: string }[]): Promise<string> {
+  if (!OPENAI_API_KEY?.trim()) {
+    throw new Error(
+      "OpenAI API key is missing. Set EXPO_PUBLIC_OPENAI_API_KEY in a .env file (local) or in EAS environment variables (production builds)."
+    );
+  }
+
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
