@@ -26,7 +26,7 @@ Anonymized, aggregated analytics (used to improve the app) cannot be tied back t
 
 Fill out this short form and we’ll process your request within **30 days**:
 
-**[→ Submit a deletion request](https://forms.gle/REPLACE_WITH_YOUR_FORM_LINK)**
+**[→ Submit a deletion request](https://docs.google.com/forms/d/e/1FAIpQLSdU06FwppZ7c1mMEiN7SAYd16lnXjh9RPrHPlpGsGOdCCDrCA/viewform)**
 
 You’ll be asked for:
 - The email address linked to your Nabra account
