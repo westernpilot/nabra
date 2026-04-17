@@ -30,9 +30,8 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files — never upload secrets to EAS (use Expo dashboard env vars instead)
-.env
-.env.local
+# local env files — `.env` (no suffix) is uploaded to EAS so EXPO_PUBLIC_* vars
+# are inlined into the production bundle. Only ignore machine-specific ones.
 .env*.local
 
 # typescript

@@ -30,10 +30,12 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files (secrets)
+# local env files
+.env*.local
+
+# Local env vars (secrets loaded into EXPO_PUBLIC_* at build time)
 .env
 .env.local
-.env*.local
 
 # typescript
 *.tsbuildinfo
