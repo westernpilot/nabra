@@ -1,3 +1,4 @@
+import * as FileSystem from "expo-file-system/legacy";
 import { AZURE_SPEECH_KEY, AZURE_SPEECH_REGION } from "./config";
 import {
   type PhonemeResult,
@@ -45,7 +46,38 @@ export function getStoredSentences(): string[] {
 }
 
 function utf8ToBase64(str: string): string {
-  return btoa(unescape(encodeURIComponent(str)));
+  const utf8: number[] = [];
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charCodeAt(i);
+    if (c < 0x80) {
+      utf8.push(c);
+    } else if (c < 0x800) {
+      utf8.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+    } else if (c < 0xd800 || c >= 0xe000) {
+      utf8.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+    } else {
+      i++;
+      c = 0x10000 + (((c & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
+      utf8.push(
+        0xf0 | (c >> 18),
+        0x80 | ((c >> 12) & 0x3f),
+        0x80 | ((c >> 6) & 0x3f),
+        0x80 | (c & 0x3f)
+      );
+    }
+  }
+  let binary = "";
+  for (const b of utf8) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 async function assessSentence(
@@ -64,9 +96,11 @@ async function assessSentence(
   try {
     console.log("Assessing audio:", audioUri);
 
-    const fileResponse = await fetch(audioUri);
-    const blob = await fileResponse.blob();
-    console.log("Audio blob size:", blob.size);
+    const base64 = await FileSystem.readAsStringAsync(audioUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    const audioBytes = base64ToBytes(base64);
+    console.log("Audio bytes:", audioBytes.byteLength);
 
     const result = await fetch(url, {
       method: "POST",
@@ -78,7 +112,7 @@ async function assessSentence(
         "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
         Accept: "application/json",
       },
-      body: blob,
+      body: audioBytes,
     });
 
     console.log("Azure response status:", result.status);
