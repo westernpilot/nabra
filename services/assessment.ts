@@ -71,15 +71,6 @@ function utf8ToBase64(str: string): string {
   return btoa(binary);
 }
 
-function base64ToBytes(base64: string): Uint8Array {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
 async function assessSentence(
   audioUri: string,
   referenceText: string
@@ -96,14 +87,12 @@ async function assessSentence(
   try {
     console.log("Assessing audio:", audioUri);
 
-    const base64 = await FileSystem.readAsStringAsync(audioUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    const audioBytes = base64ToBytes(base64);
-    console.log("Audio bytes:", audioBytes.byteLength);
+    const info = await FileSystem.getInfoAsync(audioUri);
+    console.log("Audio file info:", JSON.stringify(info));
 
-    const result = await fetch(url, {
-      method: "POST",
+    const uploadResult = await FileSystem.uploadAsync(url, audioUri, {
+      httpMethod: "POST",
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       headers: {
         "Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY,
         "Pronunciation-Assessment": utf8ToBase64(
@@ -112,12 +101,24 @@ async function assessSentence(
         "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
         Accept: "application/json",
       },
-      body: audioBytes,
     });
 
-    console.log("Azure response status:", result.status);
-    const data = await result.json();
-    console.log("Azure response:", JSON.stringify(data, null, 2));
+    console.log("Azure response status:", uploadResult.status);
+    console.log("Azure response body (first 500):", uploadResult.body?.slice(0, 500));
+
+    let data: any;
+    try {
+      data = JSON.parse(uploadResult.body);
+    } catch {
+      console.warn("Azure response was not JSON:", uploadResult.body);
+      return {
+        sentence: referenceText,
+        score: 0,
+        words: [],
+        mistakes: referenceText.split(" "),
+        letterTips: [],
+      };
+    }
 
     if (data.RecognitionStatus !== "Success") {
       console.warn("Recognition failed:", data.RecognitionStatus);
