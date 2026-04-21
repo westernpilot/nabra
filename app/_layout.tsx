@@ -4,7 +4,10 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { initAuth, onAuthChange, type AuthState } from "../services/auth";
 import { initTheme, useTheme } from "../services/theme";
-import { isOnboardingComplete } from "../services/onboarding";
+import {
+  isOnboardingComplete,
+  isOnboardingCompleteSync,
+} from "../services/onboarding";
 import { loadSelectedLanguage } from "../services/languages";
 import SplashAnimation from "../components/SplashAnimation";
 
@@ -28,15 +31,13 @@ export default function RootLayout() {
   useEffect(() => {
     if (!ready) return;
 
-    let cancelled = false;
-    isOnboardingComplete().then((done) => {
-      if (cancelled) return;
-      setOnboardingDone(done);
+    const route = segments[0];
+    const onAuthScreen = route === "auth";
+    const onOnboarding = route === "language" || route === "reminder";
+    const isAuthed = authState.status !== "loading";
 
-      const route = segments[0];
-      const onAuthScreen = route === "auth";
-      const onOnboarding = route === "language" || route === "reminder";
-      const isAuthed = authState.status !== "loading";
+    const applyGuard = (done: boolean) => {
+      setOnboardingDone(done);
 
       if (!isAuthed && !onAuthScreen) {
         router.replace("/auth");
@@ -49,8 +50,19 @@ export default function RootLayout() {
       if (isAuthed && !done && !onOnboarding && !onAuthScreen) {
         router.replace("/language");
       }
-    });
+    };
 
+    const sync = isOnboardingCompleteSync();
+    if (sync !== null) {
+      applyGuard(sync);
+      return;
+    }
+
+    let cancelled = false;
+    isOnboardingComplete().then((done) => {
+      if (cancelled) return;
+      applyGuard(done);
+    });
     return () => {
       cancelled = true;
     };
