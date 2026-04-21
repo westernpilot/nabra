@@ -4,15 +4,18 @@ import { Audio } from "expo-av";
 
 const WAVE_BAR_COUNT = 16;
 
+// Android MediaRecorder can't actually produce PCM WAV, so we record OGG Opus
+// (outputFormat 11 = OGG, audioEncoder 7 = OPUS) which Azure Speech accepts
+// natively. iOS sticks with true PCM WAV.
 const WAV_RECORDING_OPTIONS: Audio.RecordingOptions = {
   isMeteringEnabled: true,
   android: {
-    extension: ".wav",
-    outputFormat: 0,
-    audioEncoder: 0,
+    extension: ".ogg",
+    outputFormat: 11,
+    audioEncoder: 7,
     sampleRate: 16000,
     numberOfChannels: 1,
-    bitRate: 256000,
+    bitRate: 32000,
   },
   ios: {
     extension: ".wav",

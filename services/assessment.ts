@@ -90,6 +90,11 @@ async function assessSentence(
     const info = await FileSystem.getInfoAsync(audioUri);
     console.log("Audio file info:", JSON.stringify(info));
 
+    const lower = audioUri.toLowerCase();
+    const contentType = lower.endsWith(".ogg")
+      ? "audio/ogg; codecs=opus"
+      : "audio/wav; codecs=audio/pcm; samplerate=16000";
+
     const uploadResult = await FileSystem.uploadAsync(url, audioUri, {
       httpMethod: "POST",
       uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
@@ -98,7 +103,7 @@ async function assessSentence(
         "Pronunciation-Assessment": utf8ToBase64(
           JSON.stringify(pronConfig)
         ),
-        "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+        "Content-Type": contentType,
         Accept: "application/json",
       },
     });
