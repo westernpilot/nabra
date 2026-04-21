@@ -18,45 +18,43 @@ export default function RootLayout() {
   const { mode, colors } = useTheme();
 
   useEffect(() => {
-    Promise.all([
-      initAuth(),
-      initTheme(),
-      loadSelectedLanguage(),
-      isOnboardingComplete().then((v) => setOnboardingDone(v)),
-    ]).then(() => setReady(true));
+    Promise.all([initAuth(), initTheme(), loadSelectedLanguage()]).then(() =>
+      setReady(true)
+    );
     const unsub = onAuthChange(setAuthState);
     return unsub;
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    isOnboardingComplete().then((v) => setOnboardingDone(v));
-  }, [segments, ready]);
 
-  useEffect(() => {
-    if (!ready || onboardingDone === null) return;
+    let cancelled = false;
+    isOnboardingComplete().then((done) => {
+      if (cancelled) return;
+      setOnboardingDone(done);
 
-    const route = segments[0];
-    const onAuthScreen = route === "auth";
-    const onOnboarding = route === "language" || route === "reminder";
-    const isAuthed = authState.status !== "loading";
+      const route = segments[0];
+      const onAuthScreen = route === "auth";
+      const onOnboarding = route === "language" || route === "reminder";
+      const isAuthed = authState.status !== "loading";
 
-    if (!isAuthed && !onAuthScreen) {
-      router.replace("/auth");
-      return;
-    }
-    if (isAuthed && onAuthScreen) {
-      if (!onboardingDone) {
-        router.replace("/language");
-      } else {
-        router.replace("/");
+      if (!isAuthed && !onAuthScreen) {
+        router.replace("/auth");
+        return;
       }
-      return;
-    }
-    if (isAuthed && !onboardingDone && !onOnboarding && !onAuthScreen) {
-      router.replace("/language");
-    }
-  }, [ready, authState, segments, onboardingDone]);
+      if (isAuthed && onAuthScreen) {
+        router.replace(done ? "/" : "/language");
+        return;
+      }
+      if (isAuthed && !done && !onOnboarding && !onAuthScreen) {
+        router.replace("/language");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, authState, segments]);
 
   const showSplash = !splashDone;
 

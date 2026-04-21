@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,46 +10,57 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
 import {
-  signInWithGoogle,
-  continueAsGuest,
-} from "../services/auth";
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+import { signInWithGoogle, continueAsGuest } from "../services/auth";
 import { mergeCloudToLocal } from "../services/cloudSync";
 import { useTheme, getLogo } from "../services/theme";
 
-WebBrowser.maybeCompleteAuthSession();
-
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
 const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? "";
-const GOOGLE_ANDROID_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? "";
 
 export default function AuthScreen() {
   const router = useRouter();
   const { colors, mode } = useTheme();
   const [loading, setLoading] = useState(false);
 
-  const [, googleResponse, googlePromptAsync] = Google.useIdTokenAuthRequest({
-    clientId: GOOGLE_WEB_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-  });
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
+      offlineAccess: false,
+    });
+  }, []);
 
   async function handleGoogleSignIn() {
     try {
       setLoading(true);
-      const result = await googlePromptAsync();
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const result: any = await GoogleSignin.signIn();
+      const idToken =
+        result?.data?.idToken ?? result?.idToken ?? null;
 
-      if (result?.type === "success") {
-        const idToken = result.params.id_token;
-        await signInWithGoogle(idToken);
-        await mergeCloudToLocal();
-        router.replace("/");
+      if (!idToken) {
+        Alert.alert("Sign in failed", "No ID token returned from Google.");
+        return;
       }
+
+      await signInWithGoogle(idToken);
+      await mergeCloudToLocal();
+      router.replace("/");
     } catch (e: any) {
-      Alert.alert("Sign in failed", e.message || "Please try again");
+      if (e?.code === statusCodes.SIGN_IN_CANCELLED) return;
+      if (e?.code === statusCodes.IN_PROGRESS) return;
+      if (e?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert(
+          "Google Play Services",
+          "Google Play Services is not available or out of date on this device."
+        );
+        return;
+      }
+      Alert.alert("Sign in failed", e?.message || "Please try again");
     } finally {
       setLoading(false);
     }
