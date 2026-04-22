@@ -14,8 +14,14 @@ import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import { signInWithGoogle, continueAsGuest } from "../services/auth";
+import {
+  signInWithGoogle,
+  continueAsGuest,
+  onAuthChange,
+  type AuthState,
+} from "../services/auth";
 import { mergeCloudToLocal } from "../services/cloudSync";
+import { isOnboardingComplete } from "../services/onboarding";
 import { useTheme, getLogo } from "../services/theme";
 
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
@@ -33,6 +39,16 @@ export default function AuthScreen() {
       offlineAccess: false,
     });
   }, []);
+
+  useEffect(() => {
+    const unsub = onAuthChange(async (state: AuthState) => {
+      if (state.status === "signed_in" || state.status === "guest") {
+        const done = await isOnboardingComplete();
+        router.replace(done ? "/" : "/language");
+      }
+    });
+    return unsub;
+  }, [router]);
 
   async function handleGoogleSignIn() {
     try {
@@ -72,8 +88,9 @@ export default function AuthScreen() {
       }
 
       await signInWithGoogle(idToken);
-      await mergeCloudToLocal();
-      router.replace("/");
+      mergeCloudToLocal().catch((err) =>
+        console.warn("mergeCloudToLocal failed:", err)
+      );
     } catch (e: any) {
       console.warn(
         "Google sign-in error:",
@@ -108,7 +125,6 @@ export default function AuthScreen() {
 
   async function handleGuest() {
     await continueAsGuest();
-    router.replace("/");
   }
 
   const googleBg = mode === "dark" ? "#FFFFFF" : "#1F2937";
