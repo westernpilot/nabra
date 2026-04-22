@@ -37,13 +37,37 @@ export default function AuthScreen() {
   async function handleGoogleSignIn() {
     try {
       setLoading(true);
+
+      if (!GOOGLE_WEB_CLIENT_ID) {
+        Alert.alert(
+          "Config error",
+          "Google Web Client ID is missing. Check .env and rebuild."
+        );
+        return;
+      }
+
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const result: any = await GoogleSignin.signIn();
+
+      try {
+        await GoogleSignin.signOut();
+      } catch {}
+
+      const response: any = await GoogleSignin.signIn();
+
+      if (response?.type === "cancelled") return;
+
       const idToken =
-        result?.data?.idToken ?? result?.idToken ?? null;
+        response?.data?.idToken ??
+        response?.idToken ??
+        response?.user?.idToken ??
+        null;
 
       if (!idToken) {
-        Alert.alert("Sign in failed", "No ID token returned from Google.");
+        console.warn("Google sign-in response:", JSON.stringify(response));
+        Alert.alert(
+          "Sign in failed",
+          "Google did not return an ID token. (Check logs)"
+        );
         return;
       }
 
@@ -51,6 +75,12 @@ export default function AuthScreen() {
       await mergeCloudToLocal();
       router.replace("/");
     } catch (e: any) {
+      console.warn(
+        "Google sign-in error:",
+        e?.code,
+        e?.message,
+        JSON.stringify(e)
+      );
       if (e?.code === statusCodes.SIGN_IN_CANCELLED) return;
       if (e?.code === statusCodes.IN_PROGRESS) return;
       if (e?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
@@ -60,7 +90,17 @@ export default function AuthScreen() {
         );
         return;
       }
-      Alert.alert("Sign in failed", e?.message || "Please try again");
+      if (e?.code === "DEVELOPER_ERROR" || e?.code === 10) {
+        Alert.alert(
+          "Sign-in misconfigured",
+          "SHA-1 or package name doesn't match the Android OAuth client in Google Cloud Console. Add both upload key AND Play App Signing SHA-1 to the Android client, and Firebase, then wait a few minutes."
+        );
+        return;
+      }
+      Alert.alert(
+        "Sign in failed",
+        `${e?.code ?? ""} ${e?.message ?? "Please try again"}`.trim()
+      );
     } finally {
       setLoading(false);
     }
