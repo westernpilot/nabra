@@ -35,32 +35,41 @@ export function getAuthState(): AuthState {
   return _currentState;
 }
 
-export async function initAuth(): Promise<void> {
-  const isGuest = await AsyncStorage.getItem(GUEST_KEY);
+let _isGuest = false;
 
+export async function initAuth(): Promise<void> {
+  _isGuest = (await AsyncStorage.getItem(GUEST_KEY)) === "true";
+
+  let resolved = false;
   return new Promise((resolve) => {
-    const unsub = onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, (user) => {
       if (user) {
+        _isGuest = false;
         notify({ status: "signed_in", user });
-      } else if (isGuest === "true") {
+      } else if (_isGuest) {
         notify({ status: "guest" });
       } else {
         notify({ status: "loading" });
       }
-      unsub();
-      resolve();
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
     });
   });
 }
 
 export async function signInWithGoogle(idToken: string): Promise<void> {
   const credential = GoogleAuthProvider.credential(idToken);
-  await signInWithCredential(auth, credential);
+  const cred = await signInWithCredential(auth, credential);
   await AsyncStorage.removeItem(GUEST_KEY);
+  _isGuest = false;
+  notify({ status: "signed_in", user: cred.user });
 }
 
 export async function continueAsGuest(): Promise<void> {
   await AsyncStorage.setItem(GUEST_KEY, "true");
+  _isGuest = true;
   notify({ status: "guest" });
 }
 
@@ -69,6 +78,7 @@ export async function signOut(): Promise<void> {
     await fbSignOut(auth);
   }
   await AsyncStorage.removeItem(GUEST_KEY);
+  _isGuest = false;
   notify({ status: "loading" });
 }
 
