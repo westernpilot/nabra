@@ -50,6 +50,18 @@ export default function AuthScreen() {
     return unsub;
   }, [router]);
 
+  function goHome() {
+    router.replace("/");
+  }
+
+  function showWelcome(name: string | null | undefined, onDone: () => void) {
+    const first = (name ?? "").trim().split(" ")[0];
+    const msg = first
+      ? `Welcome, ${first}! You're signed in.`
+      : "You're signed in.";
+    Alert.alert("Signed in", msg, [{ text: "Let's go", onPress: onDone }]);
+  }
+
   async function handleGoogleSignIn() {
     try {
       setLoading(true);
@@ -91,6 +103,12 @@ export default function AuthScreen() {
       mergeCloudToLocal().catch((err) =>
         console.warn("mergeCloudToLocal failed:", err)
       );
+
+      const userData: any = response?.data?.user ?? response?.user ?? {};
+      const displayName: string | undefined =
+        userData?.name ?? userData?.displayName ?? userData?.givenName;
+
+      showWelcome(displayName, goHome);
     } catch (e: any) {
       console.warn(
         "Google sign-in error:",
@@ -125,6 +143,7 @@ export default function AuthScreen() {
 
   async function handleGuest() {
     await continueAsGuest();
+    showWelcome(null, goHome);
   }
 
   const googleBg = mode === "dark" ? "#FFFFFF" : "#1F2937";

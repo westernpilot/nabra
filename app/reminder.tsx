@@ -42,7 +42,7 @@ export default function ReminderScreen() {
     if (isEdit) {
       router.back();
     } else {
-      router.replace("/");
+      router.replace("/auth");
     }
   }
 

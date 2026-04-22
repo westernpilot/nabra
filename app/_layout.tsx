@@ -39,16 +39,17 @@ export default function RootLayout() {
     const applyGuard = (done: boolean) => {
       setOnboardingDone(done);
 
-      if (!isAuthed && !onAuthScreen) {
+      if (!done && !onOnboarding) {
+        router.replace("/language");
+        return;
+      }
+      if (done && !isAuthed && !onAuthScreen) {
         router.replace("/auth");
         return;
       }
-      if (isAuthed && onAuthScreen) {
-        router.replace(done ? "/" : "/language");
+      if (done && isAuthed && (onAuthScreen || onOnboarding)) {
+        router.replace("/");
         return;
-      }
-      if (isAuthed && !done && !onOnboarding && !onAuthScreen) {
-        router.replace("/language");
       }
     };
 
